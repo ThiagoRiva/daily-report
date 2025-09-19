@@ -20,6 +20,11 @@ FROM nginx:alpine
 # Copiar arquivos do build
 COPY --from=build /app/build /usr/share/nginx/html
 
+# Debug: Verificar estrutura completa de arquivos
+RUN find /usr/share/nginx/html -type f -name "*.css" -exec ls -la {} \;
+RUN find /usr/share/nginx/html -type f -name "*.js" -exec ls -la {} \;
+RUN cat /usr/share/nginx/html/index.html
+
 # Usar configuração padrão do nginx primeiro (teste)
 # COPY nginx.conf /etc/nginx/conf.d/default.conf
 
