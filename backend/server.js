@@ -93,11 +93,22 @@ app.use((req, res, next) => {
   next();
 });
 
+// ===== ROTAS PÚBLICAS (SEM AUTENTICAÇÃO) =====
+
+// Rota de saúde da API
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    version: '1.0.0'
+  });
+});
+
 // ===== MIDDLEWARE DE PROTEÇÃO =====
-// Proteger todas as rotas da API exceto autenticação e health
+// Proteger todas as rotas da API exceto as já definidas acima
 app.use('/api', (req, res, next) => {
   // Rotas públicas que não precisam de autenticação
-  const publicRoutes = ['/api/health', '/api/auth/login', '/api/auth/logout'];
+  const publicRoutes = ['/api/health', '/api/auth/login', '/api/auth/logout', '/api/auth/verify'];
   
   if (publicRoutes.includes(req.path)) {
     return next();
@@ -319,14 +330,6 @@ app.delete('/api/status-tecnico/:id', (req, res) => {
       return;
     }
     res.json({ message: 'Status técnico excluído com sucesso' });
-  });
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    version: '1.0.0'
   });
 });
 
