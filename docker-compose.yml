@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_PATH=./database/reports.db
+      - JWT_SECRET=${JWT_SECRET:-654fa045015da9f6ad62f2755a2b512c51ea43ec461dcade58687e7da97cd821}
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://relatorios.thiagoriva.com}
+    restart: unless-stopped
+    # SEM volumes por enquanto - para evitar problemas de permissão

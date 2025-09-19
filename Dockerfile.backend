@@ -9,18 +9,7 @@ RUN npm install --production
 # Copiar código do backend
 COPY backend/ ./
 
-# Debug: verificar estrutura de arquivos
-RUN ls -la ./
-RUN ls -la ./database/ || echo "Pasta database não existe"
-RUN ls -la ./middleware/ || echo "Pasta middleware não existe"
-
-# Criar pasta do banco se não existir
-RUN mkdir -p ./database
-
 EXPOSE 3001
 
-# Verificar se os módulos existem sem executar
-RUN node -e "console.log('✅ Verificando módulos...'); require('express'); require('sqlite3'); console.log('✅ Módulos principais OK');"
-
-# Tentar execução direta primeiro
-CMD ["sh", "-c", "echo '🚀 Container iniciado!' && echo '📁 PWD:' && pwd && echo '📂 Arquivos:' && ls -la && echo '🚀 Iniciando Node.js...' && node server.js"]
+# Comando ultra simples
+CMD ["node", "server.js"]
