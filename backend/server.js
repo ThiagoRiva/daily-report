@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken');
 const config = require('./config');
 const db = require('./database/database');
 const { authenticateToken, requireAdmin, requireManager, JWT_SECRET } = require('./middleware/auth');
+const { auditMiddleware } = require('./middleware/audit');
+const { clusterFilterMiddleware, aplicarFiltroCluster, podeAcessarCluster } = require('./middleware/clusterFilter');
 
 const app = express();
 
@@ -52,7 +54,8 @@ app.post('/api/auth/login', (req, res) => {
           id: user.id, 
           email: user.email, 
           nome: user.nome,
-          role: user.role 
+          role: user.role,
+          clusters_permitidos: user.clusters_permitidos
         },
         JWT_SECRET,
         { expiresIn: '24h' }
@@ -241,7 +244,7 @@ app.get('/api/funcoes', (req, res) => {
 });
 
 // Rotas de Atividades
-app.get('/api/atividades', (req, res) => {
+app.get('/api/atividades', clusterFilterMiddleware, (req, res) => {
   const filters = {
     dataInicio: req.query.dataInicio,
     dataFim: req.query.dataFim,
@@ -259,7 +262,7 @@ app.get('/api/atividades', (req, res) => {
   });
 });
 
-app.post('/api/atividades', (req, res) => {
+app.post('/api/atividades', clusterFilterMiddleware, auditMiddleware('CREATE', 'atividades'), (req, res) => {
   db.createAtividade(req.body, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
