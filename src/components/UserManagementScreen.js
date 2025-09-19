@@ -119,6 +119,14 @@ const UserManagementScreen = ({ onBack }) => {
       if (response.ok) {
         alert(editingUser ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
         
+        // Se editou o próprio usuário, forçar logout para renovar token
+        if (editingUser && editingUser.id === user.id) {
+          alert('Seus dados foram atualizados. Você será redirecionado para fazer login novamente.');
+          localStorage.removeItem('token');
+          window.location.reload();
+          return;
+        }
+        
         // Recarregar lista de usuários
         const usersResponse = await fetch('http://localhost:3001/api/usuarios', {
           headers: { 'Authorization': `Bearer ${token}` }
