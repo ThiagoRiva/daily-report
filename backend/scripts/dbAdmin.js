@@ -33,7 +33,7 @@ const commands = {
 
   // Criar usuário admin
   createAdmin: (nome, email, senha) => {
-    if (!nome || !email || senha) {
+    if (!nome || !email || !senha) {
       console.log('❌ Uso: node dbAdmin.js createAdmin "Nome" "email@empresa.com" "senha123"');
       return;
     }
