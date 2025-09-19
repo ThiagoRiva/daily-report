@@ -4,11 +4,11 @@ const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-const config = require(path.join(__dirname, 'config'));
-const db = require(path.join(__dirname, 'database', 'database'));
-const { authenticateToken, requireAdmin, requireManager, JWT_SECRET } = require(path.join(__dirname, 'middleware', 'auth'));
-const { auditMiddleware } = require(path.join(__dirname, 'middleware', 'audit'));
-const { clusterFilterMiddleware, aplicarFiltroCluster, podeAcessarCluster } = require(path.join(__dirname, 'middleware', 'clusterFilter'));
+const config = require(path.join(__dirname, 'config.js'));
+const db = require(path.join(__dirname, 'database', 'database.js'));
+const { authenticateToken, requireAdmin, requireManager, JWT_SECRET } = require(path.join(__dirname, 'middleware', 'auth.js'));
+const { auditMiddleware } = require(path.join(__dirname, 'middleware', 'audit.js'));
+const { clusterFilterMiddleware, aplicarFiltroCluster, podeAcessarCluster } = require(path.join(__dirname, 'middleware', 'clusterFilter.js'));
 
 const app = express();
 
