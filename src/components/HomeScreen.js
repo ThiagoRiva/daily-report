@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Calendar, Settings, Users, FileText, Clock, Zap, Wifi, WifiOff } from 'lucide-react';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import UserMenu from './UserMenu';
 
 const HomeScreen = ({ onNavigate }) => {
   const { loading, apiConnected } = useData();
+  const { user } = useAuth();
   const [quickMode, setQuickMode] = useState(false);
 
   const handleNavigation = (screen) => {
@@ -106,13 +108,27 @@ const HomeScreen = ({ onNavigate }) => {
             <span className="text-sm font-medium">Gerenciar</span>
           </button>
           
-          <button
-            onClick={() => handleNavigation('master-data')}
-            className="bg-white border-2 border-gray-200 text-gray-700 p-4 rounded-lg hover:border-primary-300 hover:text-primary-600 transition-colors duration-200"
-          >
-            <Settings className="w-6 h-6 mx-auto mb-2" />
-            <span className="text-sm font-medium">Cadastros</span>
-          </button>
+          {/* Cadastros - apenas para admin/coordenador */}
+          {(user?.role === 'admin' || user?.role === 'coordenador') && (
+            <button
+              onClick={() => handleNavigation('master-data')}
+              className="bg-white border-2 border-gray-200 text-gray-700 p-4 rounded-lg hover:border-primary-300 hover:text-primary-600 transition-colors duration-200"
+            >
+              <Settings className="w-6 h-6 mx-auto mb-2" />
+              <span className="text-sm font-medium">Cadastros</span>
+            </button>
+          )}
+
+          {/* Gestão de Usuários - apenas para admin */}
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => handleNavigation('user-management')}
+              className="bg-white border-2 border-primary-200 text-primary-700 p-4 rounded-lg hover:border-primary-300 hover:text-primary-600 transition-colors duration-200"
+            >
+              <Users className="w-6 h-6 mx-auto mb-2" />
+              <span className="text-sm font-medium">Usuários</span>
+            </button>
+          )}
         </div>
 
         {/* Quick Mode Info */}

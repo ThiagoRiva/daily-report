@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Plus, Save, X, Users, Shield, Edit } from 'lucide-react';
+import { ArrowLeft, Plus, Save, X, Users, Shield, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import ConfirmationModal from './ConfirmationModal';
 
 const UserManagementScreen = ({ onBack }) => {
   const { user } = useAuth();
@@ -16,6 +17,10 @@ const UserManagementScreen = ({ onBack }) => {
     senha: '',
     role: 'tecnico',
     clustersPermitidos: []
+  });
+  const [confirmModal, setConfirmModal] = useState({
+    isOpen: false,
+    user: null
   });
 
   // Verificar se usuário é admin
@@ -91,6 +96,108 @@ const UserManagementScreen = ({ onBack }) => {
     setter(prev => ({ ...prev, clustersPermitidos: newClusters }));
   };
 
+  const handleSaveUser = async () => {
+    const userData = editingUser || newUser;
+    
+    if (!userData.nome || !userData.email || (!editingUser && !userData.senha) || !userData.role) {
+      alert('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const url = editingUser 
+        ? `http://localhost:3001/api/usuarios/${editingUser.id}`
+        : 'http://localhost:3001/api/usuarios';
+      
+      const method = editingUser ? 'PUT' : 'POST';
+      
+      const body = {
+        nome: userData.nome,
+        email: userData.email,
+        role: userData.role,
+        clustersPermitidos: userData.clustersPermitidos || [],
+        ativo: userData.ativo !== false
+      };
+      
+      if (!editingUser) {
+        body.senha = userData.senha;
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(body)
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert(editingUser ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
+        
+        // Recarregar lista de usuários
+        const usersResponse = await fetch('http://localhost:3001/api/usuarios', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (usersResponse.ok) {
+          const updatedUsers = await usersResponse.json();
+          setUsuarios(updatedUsers);
+        }
+        
+        // Limpar formulário
+        setShowAddForm(false);
+        setEditingUser(null);
+        setNewUser({ nome: '', email: '', senha: '', role: 'tecnico', clustersPermitidos: [] });
+      } else {
+        alert(`Erro: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Erro ao salvar usuário:', error);
+      alert('Erro ao salvar usuário. Tente novamente.');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!confirmModal.user) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:3001/api/usuarios/${confirmModal.user.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('Usuário excluído com sucesso!');
+        
+        // Recarregar lista
+        const usersResponse = await fetch('http://localhost:3001/api/usuarios', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (usersResponse.ok) {
+          const updatedUsers = await usersResponse.json();
+          setUsuarios(updatedUsers);
+        }
+      } else {
+        alert(`Erro: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Erro ao excluir usuário:', error);
+      alert('Erro ao excluir usuário. Tente novamente.');
+    }
+    
+    setConfirmModal({ isOpen: false, user: null });
+  };
+
   return (
     <div className="mobile-container">
       <div className="p-6">
@@ -158,11 +265,26 @@ const UserManagementScreen = ({ onBack }) => {
                     
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => setEditingUser(usuario)}
+                        onClick={() => setEditingUser({
+                          ...usuario,
+                          clustersPermitidos: usuario.clusters_permitidos ? JSON.parse(usuario.clusters_permitidos) : []
+                        })}
                         className="p-2 text-gray-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+                        title="Editar usuário"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
+                      
+                      {/* Não permitir exclusão do próprio usuário */}
+                      {usuario.id !== user.id && (
+                        <button
+                          onClick={() => setConfirmModal({ isOpen: true, user: usuario })}
+                          className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Excluir usuário"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                   
@@ -312,10 +434,7 @@ const UserManagementScreen = ({ onBack }) => {
                   {/* Ações */}
                   <div className="flex space-x-3 pt-4">
                     <button
-                      onClick={() => {
-                        // Implementar salvamento
-                        console.log('Salvar usuário:', editingUser || newUser);
-                      }}
+                      onClick={handleSaveUser}
                       className="btn-primary flex-1 flex items-center justify-center"
                     >
                       <Save className="w-4 h-4 mr-2" />
@@ -337,6 +456,18 @@ const UserManagementScreen = ({ onBack }) => {
             </div>
           </div>
         )}
+
+        {/* Modal de Confirmação para Exclusão */}
+        <ConfirmationModal
+          isOpen={confirmModal.isOpen}
+          onClose={() => setConfirmModal({ isOpen: false, user: null })}
+          onConfirm={handleDeleteUser}
+          title="Excluir Usuário"
+          message={`Tem certeza que deseja excluir o usuário "${confirmModal.user?.nome}"? Esta ação não pode ser desfeita.`}
+          confirmText="Excluir"
+          cancelText="Cancelar"
+          type="danger"
+        />
       </div>
     </div>
   );

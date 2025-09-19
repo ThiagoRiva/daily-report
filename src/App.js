@@ -7,6 +7,7 @@ import TechnicalStatusScreen from './components/TechnicalStatusScreen';
 import QuickModeScreen from './components/QuickModeScreen';
 import ManagementScreen from './components/ManagementScreen';
 import MasterDataScreen from './components/MasterDataScreen';
+import UserManagementScreen from './components/UserManagementScreen';
 import LoginScreen from './components/LoginScreen';
 
 // Componente principal da aplicação
@@ -49,6 +50,9 @@ const AppContent = () => {
       
       case 'master-data':
         return <MasterDataScreen onBack={navigateBack} />;
+      
+      case 'user-management':
+        return <UserManagementScreen onBack={navigateBack} />;
       
       default:
         return <HomeScreen onNavigate={navigateToScreen} />;

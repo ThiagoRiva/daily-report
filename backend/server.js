@@ -88,6 +88,110 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ message: 'Logout realizado com sucesso' });
 });
 
+// ===== ROTAS DE GESTÃO DE USUÁRIOS (APENAS ADMIN) =====
+
+// Listar usuários
+app.get('/api/usuarios', (req, res) => {
+  // Verificar se é admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
+  }
+  db.db.all('SELECT id, nome, email, role, clusters_permitidos, ativo, created_at FROM usuarios ORDER BY nome', (err, rows) => {
+    if (err) {
+      console.error('Erro ao buscar usuários:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+    res.json(rows);
+  });
+});
+
+// Criar usuário
+app.post('/api/usuarios', auditMiddleware('CREATE', 'usuarios'), (req, res) => {
+  // Verificar se é admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
+  }
+  const { nome, email, senha, role, clustersPermitidos } = req.body;
+
+  if (!nome || !email || !senha || !role) {
+    return res.status(400).json({ error: 'Nome, email, senha e role são obrigatórios' });
+  }
+
+  // Hash da senha
+  bcrypt.hash(senha, 10, (err, senhaHash) => {
+    if (err) {
+      console.error('Erro ao gerar hash da senha:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+
+    db.db.run(
+      'INSERT INTO usuarios (nome, email, senha, role, clusters_permitidos, ativo) VALUES (?, ?, ?, ?, ?, ?)',
+      [nome, email, senhaHash, role, JSON.stringify(clustersPermitidos || []), 1],
+      function(err) {
+        if (err) {
+          if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+            return res.status(400).json({ error: 'Email já está em uso' });
+          }
+          console.error('Erro ao criar usuário:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        res.json({ id: this.lastID, message: 'Usuário criado com sucesso' });
+      }
+    );
+  });
+});
+
+// Atualizar usuário
+app.put('/api/usuarios/:id', auditMiddleware('UPDATE', 'usuarios'), (req, res) => {
+  // Verificar se é admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
+  }
+  const { nome, email, role, clustersPermitidos, ativo } = req.body;
+  const userId = req.params.id;
+
+  if (!nome || !email || !role) {
+    return res.status(400).json({ error: 'Nome, email e role são obrigatórios' });
+  }
+
+  db.db.run(
+    'UPDATE usuarios SET nome = ?, email = ?, role = ?, clusters_permitidos = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [nome, email, role, JSON.stringify(clustersPermitidos || []), ativo ? 1 : 0, userId],
+    function(err) {
+      if (err) {
+        if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+          return res.status(400).json({ error: 'Email já está em uso' });
+        }
+        console.error('Erro ao atualizar usuário:', err);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+      res.json({ message: 'Usuário atualizado com sucesso' });
+    }
+  );
+});
+
+// Excluir usuário
+app.delete('/api/usuarios/:id', auditMiddleware('DELETE', 'usuarios'), (req, res) => {
+  // Verificar se é admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
+  }
+  const userId = req.params.id;
+
+  // Não permitir exclusão do próprio usuário admin
+  if (parseInt(userId) === req.user.id) {
+    return res.status(400).json({ error: 'Não é possível excluir seu próprio usuário' });
+  }
+
+  db.db.run('DELETE FROM usuarios WHERE id = ?', [userId], function(err) {
+    if (err) {
+      console.error('Erro ao excluir usuário:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+    res.json({ message: 'Usuário excluído com sucesso' });
+  });
+});
+
 // Middleware para logging
 app.use((req, res, next) => {
   console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
@@ -132,7 +236,7 @@ app.get('/api/clusters', (req, res) => {
   });
 });
 
-app.post('/api/clusters', requireManager, (req, res) => {
+app.post('/api/clusters', requireManager, auditMiddleware('CREATE', 'clusters'), (req, res) => {
   db.createCluster(req.body, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -142,7 +246,7 @@ app.post('/api/clusters', requireManager, (req, res) => {
   });
 });
 
-app.put('/api/clusters/:id', (req, res) => {
+app.put('/api/clusters/:id', requireManager, auditMiddleware('UPDATE', 'clusters'), (req, res) => {
   db.updateCluster(req.params.id, req.body, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -152,7 +256,7 @@ app.put('/api/clusters/:id', (req, res) => {
   });
 });
 
-app.delete('/api/clusters/:id', requireManager, (req, res) => {
+app.delete('/api/clusters/:id', requireManager, auditMiddleware('DELETE', 'clusters'), (req, res) => {
   db.deleteCluster(req.params.id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -173,7 +277,7 @@ app.get('/api/usinas', (req, res) => {
   });
 });
 
-app.post('/api/usinas', (req, res) => {
+app.post('/api/usinas', requireManager, auditMiddleware('CREATE', 'usinas'), (req, res) => {
   db.createUsina(req.body, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -183,7 +287,7 @@ app.post('/api/usinas', (req, res) => {
   });
 });
 
-app.put('/api/usinas/:id', (req, res) => {
+app.put('/api/usinas/:id', requireManager, auditMiddleware('UPDATE', 'usinas'), (req, res) => {
   db.updateUsina(req.params.id, req.body, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -193,7 +297,7 @@ app.put('/api/usinas/:id', (req, res) => {
   });
 });
 
-app.delete('/api/usinas/:id', (req, res) => {
+app.delete('/api/usinas/:id', requireManager, auditMiddleware('DELETE', 'usinas'), (req, res) => {
   db.deleteUsina(req.params.id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -214,7 +318,7 @@ app.get('/api/tecnicos', (req, res) => {
   });
 });
 
-app.post('/api/tecnicos', (req, res) => {
+app.post('/api/tecnicos', requireManager, auditMiddleware('CREATE', 'tecnicos'), (req, res) => {
   db.createTecnico(req.body, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -224,7 +328,7 @@ app.post('/api/tecnicos', (req, res) => {
   });
 });
 
-app.put('/api/tecnicos/:id', (req, res) => {
+app.put('/api/tecnicos/:id', requireManager, auditMiddleware('UPDATE', 'tecnicos'), (req, res) => {
   db.updateTecnico(req.params.id, req.body, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -234,7 +338,7 @@ app.put('/api/tecnicos/:id', (req, res) => {
   });
 });
 
-app.delete('/api/tecnicos/:id', (req, res) => {
+app.delete('/api/tecnicos/:id', requireManager, auditMiddleware('DELETE', 'tecnicos'), (req, res) => {
   db.deleteTecnico(req.params.id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
