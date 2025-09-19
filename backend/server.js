@@ -3,12 +3,11 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const path = require('path');
-const config = require(path.join(__dirname, 'config.js'));
-const db = require(path.join(__dirname, 'database', 'database.js'));
-const { authenticateToken, requireAdmin, requireManager, JWT_SECRET } = require(path.join(__dirname, 'middleware', 'auth.js'));
-const { auditMiddleware } = require(path.join(__dirname, 'middleware', 'audit.js'));
-const { clusterFilterMiddleware, aplicarFiltroCluster, podeAcessarCluster } = require(path.join(__dirname, 'middleware', 'clusterFilter.js'));
+const config = require('./config');
+const db = require('./database/database');
+const { authenticateToken, requireAdmin, requireManager, JWT_SECRET } = require('./middleware/auth');
+const { auditMiddleware } = require('./middleware/audit');
+const { clusterFilterMiddleware, aplicarFiltroCluster, podeAcessarCluster } = require('./middleware/clusterFilter');
 
 const app = express();
 

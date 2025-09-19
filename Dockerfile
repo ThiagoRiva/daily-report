@@ -3,17 +3,14 @@ FROM node:18-alpine
 # Instalar curl para healthcheck
 RUN apk add --no-cache curl
 
-# Definir diretório de trabalho
-WORKDIR /app
+# Copiar todo o projeto
+COPY . /app
 
-# Copiar package.json do backend
-COPY backend/package*.json ./
+# Definir diretório de trabalho
+WORKDIR /app/backend
 
 # Instalar dependências
 RUN npm install --production
-
-# Copiar código do backend mantendo a estrutura de pastas
-COPY backend/ ./
 
 # Expor porta
 EXPOSE 3000
@@ -22,6 +19,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:3000/api/health || exit 1
 
-# Comando de inicialização - garantir working directory
-WORKDIR /app
+# Comando de inicialização
 CMD ["node", "server.js"]
