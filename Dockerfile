@@ -12,11 +12,11 @@ COPY backend/package*.json ./
 # Instalar dependências
 RUN npm install --production
 
-# Copiar código do backend
+# Copiar código do backend mantendo a estrutura de pastas
 COPY backend/ ./
 
-# Criar diretório para banco de dados
-RUN mkdir -p database
+# Verificar se os arquivos foram copiados corretamente
+RUN ls -la && ls -la database/ && ls -la middleware/
 
 # Criar usuário não-root para segurança
 RUN addgroup -g 1001 -S nodejs
