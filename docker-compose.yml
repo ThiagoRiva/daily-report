@@ -13,4 +13,9 @@ services:
       - DATABASE_PATH=./database/reports.db
       - JWT_SECRET=654fa045015da9f6ad62f2755a2b512c51ea43ec461dcade58687e7da97cd821
       - CORS_ORIGIN=https://relatorios.thiagoriva.com
+    volumes:
+      - app_data:/app/database
     restart: unless-stopped
+
+volumes:
+  app_data:
