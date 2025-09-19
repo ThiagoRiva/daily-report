@@ -22,4 +22,18 @@ EXPOSE 3000
 # Verificar se os módulos existem sem executar
 RUN node -e "console.log('✅ Verificando módulos...'); require('express'); require('sqlite3'); console.log('✅ Módulos principais OK');"
 
-CMD ["node", "server.js"]
+# Script de inicialização com logs
+RUN echo '#!/bin/sh' > start.sh && \
+    echo 'echo "🚀 Iniciando servidor..."' >> start.sh && \
+    echo 'echo "📁 Diretório atual: $(pwd)"' >> start.sh && \
+    echo 'echo "📂 Arquivos disponíveis:"' >> start.sh && \
+    echo 'ls -la' >> start.sh && \
+    echo 'echo "🔧 Variáveis de ambiente:"' >> start.sh && \
+    echo 'echo "NODE_ENV=$NODE_ENV"' >> start.sh && \
+    echo 'echo "PORT=$PORT"' >> start.sh && \
+    echo 'echo "DATABASE_PATH=$DATABASE_PATH"' >> start.sh && \
+    echo 'echo "🚀 Executando server.js..."' >> start.sh && \
+    echo 'exec node server.js' >> start.sh && \
+    chmod +x start.sh
+
+CMD ["./start.sh"]
