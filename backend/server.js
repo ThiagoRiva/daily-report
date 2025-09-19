@@ -92,7 +92,7 @@ app.post('/api/auth/logout', (req, res) => {
 
 // Listar usuários
 app.get('/api/usuarios', (req, res) => {
-  // Verificar se é admin
+  // Verificar se é admin (proteção adicional)
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
   }
@@ -107,7 +107,7 @@ app.get('/api/usuarios', (req, res) => {
 
 // Criar usuário
 app.post('/api/usuarios', auditMiddleware('CREATE', 'usuarios'), (req, res) => {
-  // Verificar se é admin
+  // Verificar se é admin (proteção adicional)
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
   }
@@ -143,7 +143,7 @@ app.post('/api/usuarios', auditMiddleware('CREATE', 'usuarios'), (req, res) => {
 
 // Atualizar usuário
 app.put('/api/usuarios/:id', auditMiddleware('UPDATE', 'usuarios'), (req, res) => {
-  // Verificar se é admin
+  // Verificar se é admin (proteção adicional)
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
   }
@@ -172,7 +172,7 @@ app.put('/api/usuarios/:id', auditMiddleware('UPDATE', 'usuarios'), (req, res) =
 
 // Excluir usuário
 app.delete('/api/usuarios/:id', auditMiddleware('DELETE', 'usuarios'), (req, res) => {
-  // Verificar se é admin
+  // Verificar se é admin (proteção adicional)
   if (!req.user || req.user.role !== 'admin') {
     return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
   }
@@ -222,6 +222,7 @@ app.use('/api', (req, res, next) => {
   // Aplicar autenticação para todas as outras rotas
   authenticateToken(req, res, next);
 });
+
 
 // ===== ROTAS PROTEGIDAS =====
 
