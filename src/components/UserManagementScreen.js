@@ -23,25 +23,6 @@ const UserManagementScreen = ({ onBack }) => {
     user: null
   });
 
-  // Verificar se usuário é admin
-  if (user?.role !== 'admin') {
-    return (
-      <div className="mobile-container">
-        <div className="p-6">
-          <div className="text-center">
-            <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Acesso Negado</h2>
-            <p className="text-gray-600 mb-6">Apenas administradores podem gerenciar usuários.</p>
-            <button onClick={onBack} className="btn-primary">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Voltar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Carregar usuários
   useEffect(() => {
     const carregarUsuarios = async () => {
@@ -197,6 +178,25 @@ const UserManagementScreen = ({ onBack }) => {
     
     setConfirmModal({ isOpen: false, user: null });
   };
+
+  // Verificar se usuário é admin
+  if (user?.role !== 'admin') {
+    return (
+      <div className="mobile-container">
+        <div className="p-6">
+          <div className="text-center">
+            <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Acesso Negado</h2>
+            <p className="text-gray-600 mb-6">Apenas administradores podem gerenciar usuários.</p>
+            <button onClick={onBack} className="btn-primary">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mobile-container">
