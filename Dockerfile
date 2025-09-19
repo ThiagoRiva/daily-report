@@ -15,15 +15,11 @@ RUN npm install --production
 # Copiar código do backend mantendo a estrutura de pastas
 COPY backend/ ./
 
-# Debug: Verificar estrutura após COPY
-RUN echo "=== DEBUG: Listando estrutura de arquivos ===" && \
-    find /app -type f -name "*.js" | head -20 && \
-    echo "=== DEBUG: Conteúdo do diretório /app ===" && \
-    ls -la /app && \
-    echo "=== DEBUG: Testando se database.js existe ===" && \
-    test -f /app/database/database.js && echo "✅ database.js encontrado" || echo "❌ database.js NÃO encontrado" && \
-    echo "=== DEBUG: Listando /app/database/ ===" && \
-    ls -la /app/database/ || echo "❌ Diretório database não existe"
+# Debug: Testar require() diretamente
+RUN echo "=== DEBUG: Testando require() do Node.js ===" && \
+    cd /app && \
+    node -e "console.log('Working directory:', process.cwd()); console.log('Trying require...'); const db = require('./database/database'); console.log('✅ Require funcionou!'); process.exit(0);" || \
+    echo "❌ Require falhou mesmo com arquivos presentes"
 
 # Expor porta
 EXPOSE 3000
