@@ -19,4 +19,7 @@ RUN mkdir -p ./database
 
 EXPOSE 3000
 
+# Debug: testar se o Node.js consegue carregar o server.js
+RUN node -e "console.log('✅ Node.js funcionando'); console.log('Testando require...'); const app = require('./server.js'); console.log('✅ Server.js carregado com sucesso');" || echo "❌ Erro ao carregar server.js"
+
 CMD ["node", "server.js"]
