@@ -17,7 +17,7 @@ RUN ls -la ./middleware/ || echo "Pasta middleware não existe"
 # Criar pasta do banco se não existir
 RUN mkdir -p ./database
 
-EXPOSE 3000
+EXPOSE 3001
 
 # Verificar se os módulos existem sem executar
 RUN node -e "console.log('✅ Verificando módulos...'); require('express'); require('sqlite3'); console.log('✅ Módulos principais OK');"
