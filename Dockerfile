@@ -18,13 +18,11 @@ COPY backend/ ./
 # Garantir que todos os diretórios necessários existem
 RUN mkdir -p database
 
-# Criar usuário não-root para segurança
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S backend -u 1001
-
-# Dar permissões ao usuário
-RUN chown -R backend:nodejs /app
-USER backend
+# Temporariamente removendo usuario nao-root para testar
+# RUN addgroup -g 1001 -S nodejs
+# RUN adduser -S backend -u 1001
+# RUN chown -R backend:nodejs /app
+# USER backend
 
 # Expor porta
 EXPOSE 3000
