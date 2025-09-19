@@ -67,7 +67,8 @@ app.post('/api/auth/login', (req, res) => {
           id: user.id,
           nome: user.nome,
           email: user.email,
-          role: user.role
+          role: user.role,
+          clustersPermitidos: user.clusters_permitidos ? JSON.parse(user.clusters_permitidos) : []
         }
       });
     } catch (error) {

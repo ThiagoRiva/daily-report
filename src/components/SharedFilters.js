@@ -1,5 +1,6 @@
 import React from 'react';
 import { Calendar, MapPin, User, Briefcase } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const SharedFilters = ({ 
   filters, 
@@ -12,7 +13,14 @@ const SharedFilters = ({
   showUsina = true,
   allowMultipleTecnicos = false
 }) => {
+  const { user } = useAuth();
   const { data, clusterId, usinaId, tecnicoId, tecnicoIds } = filters;
+
+  // Filtrar clusters baseado nas permissões do usuário
+  const allowedClusters = user?.clustersPermitidos || [];
+  const filteredClusters = user?.role === 'admin' || user?.role === 'coordenador' 
+    ? clusters 
+    : clusters.filter(cluster => allowedClusters.includes(parseInt(cluster.id)));
 
   // Filtrar usinas por cluster selecionado
   const filteredUsinas = clusterId 
@@ -64,19 +72,19 @@ const SharedFilters = ({
             <MapPin className="w-4 h-4 inline mr-1" />
             Cluster
           </label>
-          <select
-            value={clusterId}
-            onChange={(e) => handleInputChange('clusterId', e.target.value)}
-            className="select-field"
-            required
-          >
-            <option value="">Selecione um cluster</option>
-            {clusters.filter(c => c.ativo).map(cluster => (
-              <option key={cluster.id} value={cluster.id}>
-                {cluster.nome}
-              </option>
-            ))}
-          </select>
+            <select
+              value={clusterId}
+              onChange={(e) => handleInputChange('clusterId', e.target.value)}
+              className="select-field"
+              required
+            >
+              <option value="">Selecione um cluster</option>
+              {filteredClusters.filter(c => c.ativo).map(cluster => (
+                <option key={cluster.id} value={cluster.id}>
+                  {cluster.nome}
+                </option>
+              ))}
+            </select>
         </div>
 
         {/* Usina (opcional) */}
@@ -189,7 +197,7 @@ const SharedFilters = ({
               <p><span className="font-medium">Data:</span> {new Date(data).toLocaleDateString('pt-BR')}</p>
             )}
             {clusterId && (
-              <p><span className="font-medium">Cluster:</span> {clusters.find(c => c.id === clusterId)?.nome}</p>
+              <p><span className="font-medium">Cluster:</span> {filteredClusters.find(c => c.id === clusterId)?.nome}</p>
             )}
             {showUsina && usinaId && (
               <p><span className="font-medium">Usina:</span> {usinas.find(u => u.id === usinaId)?.nome}</p>
