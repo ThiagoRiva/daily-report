@@ -29,11 +29,11 @@ fi
 
 # 1. Fazer backup do banco de dados
 log "Fazendo backup do banco de dados..."
-if [ -f "backend/database/reports.db" ]; then
+if [ -f "backend/storage/reports.db" ]; then
     BACKUP_DIR="backups"
     mkdir -p $BACKUP_DIR
     DATE=$(date +%Y%m%d_%H%M%S)
-    cp backend/database/reports.db "$BACKUP_DIR/reports_backup_$DATE.db"
+    cp backend/storage/reports.db "$BACKUP_DIR/reports_backup_$DATE.db"
     log "Backup criado: $BACKUP_DIR/reports_backup_$DATE.db"
 else
     warning "Banco de dados não encontrado, pulando backup..."
@@ -78,7 +78,8 @@ if [ ! -f ".env.production" ]; then
 NODE_ENV=production
 PORT=3001
 JWT_SECRET=MUDE_ESTA_CHAVE_EM_PRODUCAO_256_BITS_SEGURA
-DATABASE_PATH=./backend/database/reports.db
+DATABASE_PATH=./backend/storage/reports.db
+DB_PATH=./backend/storage/reports.db
 
 # Frontend (usado durante o build) - HOSTINGER
 REACT_APP_API_URL=https://api.report.thiagoriva.com/api

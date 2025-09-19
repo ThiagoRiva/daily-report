@@ -10,7 +10,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 3001,
-      DB_PATH: './database/reports.db'
+      DB_PATH: './storage/reports.db'
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',

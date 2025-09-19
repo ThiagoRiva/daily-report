@@ -10,11 +10,12 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - DATABASE_PATH=./database/reports.db
+      - DATABASE_PATH=/app/storage/reports.db
+      - DB_PATH=/app/storage/reports.db
       - JWT_SECRET=654fa045015da9f6ad62f2755a2b512c51ea43ec461dcade58687e7da97cd821
       - CORS_ORIGIN=https://relatorios.thiagoriva.com
     volumes:
-      - app_data:/app/database
+      - app_data:/app/storage
     restart: unless-stopped
 
 volumes:

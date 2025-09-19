@@ -6,21 +6,27 @@ const config = require('../config');
 class Database {
   constructor() {
     this.db = null;
+    this.dbPath = path.resolve(config.dbPath);
     this.init();
   }
 
   init() {
     // Criar diretório do banco se não existir
-    const dbDir = path.dirname(config.dbPath);
-    if (!fs.existsSync(dbDir)) {
-      fs.mkdirSync(dbDir, { recursive: true });
+    const dbDir = path.dirname(this.dbPath);
+    try {
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
+    } catch (err) {
+      console.error(`Não foi possível preparar o diretório do banco de dados (${dbDir}):`, err.message);
+      throw err;
     }
 
-    this.db = new sqlite3.Database(config.dbPath, (err) => {
+    this.db = new sqlite3.Database(this.dbPath, (err) => {
       if (err) {
         console.error('Erro ao conectar com o banco de dados:', err.message);
       } else {
-        console.log('Conectado ao banco de dados SQLite.');
+        console.log(`Conectado ao banco de dados SQLite em ${this.dbPath}.`);
         this.createTables();
       }
     });
@@ -28,8 +34,19 @@ class Database {
 
   createTables() {
     const schemaPath = path.join(__dirname, 'schema.sql');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
-    
+    let schema;
+
+    try {
+      schema = fs.readFileSync(schemaPath, 'utf8');
+    } catch (err) {
+      console.error(
+        `Não foi possível carregar o schema do banco de dados em ${schemaPath}. ` +
+          'Verifique se o arquivo existe e possui permissões de leitura.'
+      );
+      console.error('Detalhes do erro:', err.message);
+      return;
+    }
+
     this.db.exec(schema, (err) => {
       if (err) {
         console.error('Erro ao criar tabelas:', err.message);

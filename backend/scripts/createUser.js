@@ -1,9 +1,10 @@
 const bcrypt = require('bcryptjs');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const config = require('../config');
 
 // Conectar ao banco de dados
-const dbPath = path.join(__dirname, '../database/reports.db');
+const dbPath = path.resolve(config.dbPath);
 const db = new sqlite3.Database(dbPath);
 
 async function createUser(nome, email, senha, role = 'tecnico') {
