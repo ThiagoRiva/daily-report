@@ -18,13 +18,22 @@ RUN npm run build
 FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
 
-# Configuração do nginx para SPA
+# Configuração do nginx para SPA com assets estáticos
 RUN echo 'server { \
     listen 80; \
     server_name _; \
+    root /usr/share/nginx/html; \
+    index index.html index.htm; \
+    \
+    # Servir arquivos estáticos com cache \
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ { \
+        expires 1y; \
+        add_header Cache-Control "public, immutable"; \
+        try_files $uri =404; \
+    } \
+    \
+    # Servir SPA \
     location / { \
-        root /usr/share/nginx/html; \
-        index index.html index.htm; \
         try_files $uri $uri/ /index.html; \
     } \
 }' > /etc/nginx/conf.d/default.conf
