@@ -6,8 +6,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copiar código fonte e fazer build
-COPY . .
+# Copiar apenas arquivos do frontend (excluindo backend/)
+COPY public/ ./public/
+COPY src/ ./src/
+COPY env.production ./.env.production
+
+# Fazer build
 RUN npm run build
 
 # Servir com nginx
