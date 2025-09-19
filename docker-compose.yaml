@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_PATH=./database/reports.db
+      - JWT_SECRET=${JWT_SECRET:-654fa045015da9f6ad62f2755a2b512c51ea43ec461dcade58687e7da97cd821}
+    volumes:
+      - app_data:/app/backend/database
+    restart: unless-stopped
+    # SEM HEALTHCHECK - será gerenciado pelo Coolify
+
+volumes:
+  app_data:
