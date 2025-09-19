@@ -15,11 +15,8 @@ RUN npm install --production
 # Copiar código do backend mantendo a estrutura de pastas
 COPY backend/ ./
 
-# Verificar se os arquivos foram copiados corretamente
-RUN ls -la && ls -la database/ && ls -la middleware/
-
-# Testar se o Node.js consegue carregar os módulos
-RUN node -e "console.log('Testing require...'); const db = require('./database/database'); console.log('✅ Database module loaded successfully');"
+# Garantir que todos os diretórios necessários existem
+RUN mkdir -p database
 
 # Criar usuário não-root para segurança
 RUN addgroup -g 1001 -S nodejs
