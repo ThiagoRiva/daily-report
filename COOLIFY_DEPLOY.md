@@ -1,199 +1,237 @@
-# 🐳 Deploy no Coolify - Sistema de Relatórios Diários
+# 🚀 Deploy com Coolify - Sistema de Relatórios Diários
 
-## 🎯 Arquitetura Final:
-- **Frontend**: Hostinger (`report.thiagoriva.com`)
-- **Backend**: VPS com Coolify (Node.js + SQLite)
+Este guia detalha como fazer o deploy do backend na VPS usando Coolify e manter o frontend na Hostinger.
 
-## ✅ **Vantagens do Coolify:**
-- ✅ **Isolamento completo** via Docker
-- ✅ **Não interfere** em outros serviços
-- ✅ **SSL automático** via Let's Encrypt
-- ✅ **Proxy reverso** automático
-- ✅ **Logs centralizados**
-- ✅ **Deploy via Git**
-- ✅ **Backup automático**
+## 📋 Arquitetura Final
 
-## 📋 Passo a Passo:
-
-### 1️⃣ **Preparar Aplicação para Coolify:**
-
-#### Criar Dockerfile:
-```dockerfile
-FROM node:18-alpine
-
-WORKDIR /app
-
-# Copiar package.json do backend
-COPY backend/package*.json ./
-RUN npm install --production
-
-# Copiar código do backend
-COPY backend/ ./
-
-# Criar diretório para banco de dados
-RUN mkdir -p database
-
-# Expor porta
-EXPOSE 3000
-
-# Comando de inicialização
-CMD ["node", "server.js"]
+```
+Frontend (Hostinger)     Backend (VPS + Coolify)
+report.thiagoriva.com ←→ api-daily-report.seu-dominio.com
 ```
 
-#### Criar docker-compose.yml:
-```yaml
-version: '3.8'
-services:
-  daily-report-api:
-    build: .
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - JWT_SECRET=${JWT_SECRET}
-      - DATABASE_PATH=./database/reports.db
-    volumes:
-      - ./data:/app/database
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-```
+## 🔧 Pré-requisitos
 
-### 2️⃣ **Configurar no Coolify:**
+- ✅ VPS com Coolify instalado
+- ✅ Domínio configurado (ou IP da VPS)
+- ✅ GitHub repository público: https://github.com/ThiagoRiva/daily-report
+- ✅ Hostinger com subdomínio report.thiagoriva.com
 
-#### A) Criar Nova Aplicação:
-1. **Coolify Dashboard** → **Projects** → **New Resource**
-2. **Application** → **Public Repository**
-3. **Repository URL**: `https://github.com/seu-usuario/daily-report`
-4. **Branch**: `main`
-5. **Build Pack**: `Docker`
+## 🚀 Passo 1: Configurar Aplicação no Coolify
 
-#### B) Configurações da Aplicação:
-- **Name**: `daily-report-api`
-- **Domains**: `api.seudominio.com` ou usar subdomínio da VPS
-- **Port**: `3000`
-- **Health Check**: `/api/health`
+### 1.1 Criar Nova Aplicação
+1. Acesse seu painel Coolify
+2. Clique em **"New Resource"** → **"Application"**
+3. Escolha **"Public Repository"**
 
-#### C) Variáveis de Ambiente:
-```
+### 1.2 Configurar Repository
+- **Repository URL**: `https://github.com/ThiagoRiva/daily-report`
+- **Branch**: `main`
+- **Build Pack**: `Dockerfile`
+- **Dockerfile Location**: `./Dockerfile`
+
+### 1.3 Configurações Essenciais
+
+#### General Settings:
+- **Name**: `daily-report`
+- **Description**: `Sistema de Relatórios Diários - Backend API`
+
+#### Domains:
+- Configure seu domínio ou use o IP da VPS
+- Exemplo: `api-daily-report.seu-dominio.com`
+- Ou: `SEU_IP:3000`
+
+#### Build Settings:
+- **Build Pack**: `Dockerfile`
+- **Base Directory**: `/` (raiz do projeto)
+- **Dockerfile Location**: `./Dockerfile`
+
+#### Environment Variables:
+```bash
 NODE_ENV=production
 PORT=3000
-JWT_SECRET=sua_chave_jwt_super_secreta_256_bits
+JWT_SECRET=MUDE_ESTA_CHAVE_SEGURA_256_BITS
 DATABASE_PATH=./database/reports.db
 ```
 
-### 3️⃣ **Deploy:**
-1. **Deploy** no Coolify
-2. Coolify irá:
-   - Fazer pull do repositório
-   - Build da imagem Docker
-   - Criar container isolado
-   - Configurar proxy reverso
-   - Gerar SSL automático
+#### Network Settings:
+- **Port Exposes**: `3000`
+- **Port Mapping**: `3000:3000`
 
-### 4️⃣ **Configurar Domínio:**
+#### Health Check:
+- ✅ **Enable Health Check**
+- **Path**: `/api/health`
+- **Port**: `3000`
+- **Interval**: `30s`
+- **Timeout**: `10s`
+- **Retries**: `3`
+- **Start Period**: `5s`
 
-#### Opção A - Subdomínio da VPS:
-- `api-daily-report.sua-vps.com`
+### 1.4 Deploy
+1. Clique em **"Deploy"**
+2. Acompanhe os logs de build
+3. Aguarde o health check passar
 
-#### Opção B - Subdomínio Personalizado:
-1. **DNS**: Criar A record `api.thiagoriva.com` → IP da VPS
-2. **Coolify**: Adicionar domínio `api.thiagoriva.com`
+## 🔍 Troubleshooting Deployment
 
-### 5️⃣ **Inicializar Banco:**
+### Problema: Health Check Failed
+**Sintoma**: "New container is not healthy, rolling back"
+
+**Soluções**:
+1. Verificar se curl está instalado no container (✅ já corrigido)
+2. Confirmar endpoint `/api/health` está respondendo
+3. Verificar logs do container
+
+### Problema: Build Failed
+**Sintoma**: Erro durante o build
+
+**Soluções**:
+1. Verificar se o Dockerfile está correto
+2. Confirmar dependências no package.json
+3. Verificar logs de build
+
+### Problema: Container Restart Loop
+**Sintoma**: Container reinicia constantemente
+
+**Soluções**:
+1. Verificar variáveis de ambiente
+2. Conferir permissões de arquivo
+3. Verificar logs de aplicação
+
+## 🌐 Passo 2: Configurar Frontend (Hostinger)
+
+### 2.1 Configurar URL da API
+Execute no seu computador:
+```bash
+./configure-api-url.sh
+```
+
+Quando solicitado, digite a URL da API:
+- Se usando domínio: `https://api-daily-report.seu-dominio.com/api`
+- Se usando IP: `http://SEU_IP:3000/api`
+
+### 2.2 Upload do Frontend
+1. Acesse o hPanel da Hostinger
+2. Vá para **Gerenciador de Arquivos**
+3. Navegue até `public_html/report/`
+4. Exclua conteúdo atual (se houver)
+5. Faça upload do conteúdo da pasta `build/`
+
+### 2.3 Configurar .htaccess
+Certifique-se que existe o arquivo `.htaccess` em `public_html/report/`:
+
+```apache
+Options -MultiViews
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.html [QSA,L]
+```
+
+## 🔐 Passo 3: Configurar Usuário Admin
+
+### 3.1 Via Coolify Terminal
+1. No painel Coolify, acesse sua aplicação
+2. Vá para **"Terminal"** ou **"Console"**
+3. Execute:
+```bash
+cd /app
+node scripts/dbAdmin.js createAdmin "Admin" "admin@empresa.com" "senha123"
+```
+
+### 3.2 Via Script Local (alternativo)
+Se tiver acesso SSH à VPS:
+```bash
+# SSH na VPS
+ssh user@seu-vps
+
+# Encontrar container
+docker ps | grep daily-report
+
+# Executar comando no container
+docker exec -it CONTAINER_ID node scripts/dbAdmin.js createAdmin "Admin" "admin@empresa.com" "senha123"
+```
+
+## 📊 Passo 4: Testar Aplicação
+
+### 4.1 Testar Backend
+```bash
+# Health check
+curl https://api-daily-report.seu-dominio.com/api/health
+
+# Ou com IP
+curl http://SEU_IP:3000/api/health
+
+# Resposta esperada:
+{
+  "status": "ok",
+  "timestamp": "2024-XX-XX...",
+  "uptime": 123.45,
+  "environment": "production"
+}
+```
+
+### 4.2 Testar Frontend
+1. Acesse: https://report.thiagoriva.com
+2. Faça login com as credenciais do admin
+3. Teste as funcionalidades principais
+
+## 🔄 Passo 5: Monitoramento
+
+### 5.1 Logs no Coolify
+- Acesse **"Logs"** na aplicação
+- Monitore erros e performance
+- Configure alertas se necessário
+
+### 5.2 Backup Automático
+Configure backup do volume do banco:
+```bash
+# No Coolify, configurar volume persistente
+# Volume: app_data:/app/database
+```
+
+## 🚨 Comandos de Emergência
+
+### Restart da Aplicação
+No painel Coolify:
+1. Vá para sua aplicação
+2. Clique em **"Restart"**
+
+### Rollback
+No painel Coolify:
+1. Vá para **"Deployments"**
+2. Selecione versão anterior
+3. Clique em **"Redeploy"**
+
+### Logs em Tempo Real
 ```bash
 # Via SSH na VPS
-ssh root@sua-vps.com
-
-# Entrar no container
-docker exec -it daily-report-api sh
-
-# Criar admin
-node scripts/dbAdmin.js createAdmin "Seu Nome" "admin@empresa.com" "senha123"
+docker logs -f CONTAINER_ID
 ```
 
-### 6️⃣ **Atualizar Frontend:**
-```bash
-# URL final da API (exemplo)
-echo "REACT_APP_API_URL=https://api.thiagoriva.com/api" > .env.production
+## 📋 Checklist Final
 
-# Rebuild
-npm run build
+- [ ] Backend deployado no Coolify
+- [ ] Health check passando
+- [ ] Domínio/IP configurado
+- [ ] Frontend atualizado na Hostinger
+- [ ] Usuário admin criado
+- [ ] Testes de login funcionando
+- [ ] Dados sendo salvos corretamente
+- [ ] Backup configurado
 
-# Upload para Hostinger
-```
+## 🆘 Suporte
 
-## 🔧 **Estrutura de Arquivos Necessários:**
+Se encontrar problemas:
 
-### Dockerfile (raiz do projeto):
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY backend/package*.json ./
-RUN npm install --production
-COPY backend/ ./
-RUN mkdir -p database
-EXPOSE 3000
-CMD ["node", "server.js"]
-```
+1. **Verifique logs do Coolify**
+2. **Teste endpoints manualmente**
+3. **Confirme variáveis de ambiente**
+4. **Verifique conectividade de rede**
 
-### .dockerignore:
-```
-node_modules
-npm-debug.log
-.git
-.gitignore
-README.md
-Dockerfile
-.dockerignore
-src/
-build/
-public/
-```
+---
 
-## 🚀 **Vantagens desta Solução:**
+## 📞 URLs Importantes
 
-### ✅ **Isolamento Completo:**
-- Cada app roda em container separado
-- Não interfere em outros serviços
-- Recursos dedicados por app
-
-### ✅ **Gerenciamento Fácil:**
-- Interface web intuitiva
-- Logs em tempo real
-- Restart automático
-- Updates via Git
-
-### ✅ **Produção-Ready:**
-- SSL automático
-- Proxy reverso
-- Load balancing
-- Health checks
-
-### ✅ **Backup e Persistência:**
-- Volume para banco SQLite
-- Backup automático do Coolify
-- Dados persistem entre deploys
-
-## 📊 **Monitoramento:**
-- **Logs**: Via interface Coolify
-- **Métricas**: CPU, RAM, Network
-- **Health**: Status em tempo real
-- **Alerts**: Notificações automáticas
-
-## 🔄 **Updates:**
-```bash
-# Commit mudanças
-git add .
-git commit -m "Update"
-git push
-
-# Coolify detecta automaticamente e redeploy
-```
-
-## 💡 **Dica Pro:**
-Configure **webhook** no GitHub para deploy automático quando fizer push!
+- **Frontend**: https://report.thiagoriva.com
+- **Backend**: https://api-daily-report.seu-dominio.com
+- **Health Check**: https://api-daily-report.seu-dominio.com/api/health
+- **GitHub**: https://github.com/ThiagoRiva/daily-report
