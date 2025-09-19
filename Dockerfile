@@ -15,14 +15,15 @@ RUN npm install --production
 # Copiar código do backend mantendo a estrutura de pastas
 COPY backend/ ./
 
-# Garantir que todos os diretórios necessários existem
-RUN mkdir -p database
-
-# Temporariamente removendo usuario nao-root para testar
-# RUN addgroup -g 1001 -S nodejs
-# RUN adduser -S backend -u 1001
-# RUN chown -R backend:nodejs /app
-# USER backend
+# Debug: Verificar estrutura após COPY
+RUN echo "=== DEBUG: Listando estrutura de arquivos ===" && \
+    find /app -type f -name "*.js" | head -20 && \
+    echo "=== DEBUG: Conteúdo do diretório /app ===" && \
+    ls -la /app && \
+    echo "=== DEBUG: Testando se database.js existe ===" && \
+    test -f /app/database/database.js && echo "✅ database.js encontrado" || echo "❌ database.js NÃO encontrado" && \
+    echo "=== DEBUG: Listando /app/database/ ===" && \
+    ls -la /app/database/ || echo "❌ Diretório database não existe"
 
 # Expor porta
 EXPOSE 3000
