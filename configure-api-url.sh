@@ -58,8 +58,8 @@ cat > .env.production << EOF
 NODE_ENV=production
 PORT=3000
 JWT_SECRET=MUDE_ESTA_CHAVE_EM_PRODUCAO_256_BITS_SEGURA
-DATABASE_PATH=./backend/storage/reports.db
-DB_PATH=./backend/storage/reports.db
+DATABASE_PATH=./storage/reports.db
+DB_PATH=./storage/reports.db
 
 # Frontend - URL da API no VPS
 REACT_APP_API_URL=$API_URL

@@ -1,4 +1,8 @@
 // Configuração para PM2 (gerenciador de processos Node.js)
+const path = require('path');
+
+const dbPath = path.join(__dirname, '..', 'storage', 'reports.db');
+
 module.exports = {
   apps: [{
     name: 'daily-report-api',
@@ -10,7 +14,7 @@ module.exports = {
     env: {
       NODE_ENV: 'production',
       PORT: 3001,
-      DB_PATH: './storage/reports.db'
+      DB_PATH: dbPath
     },
     error_file: './logs/err.log',
     out_file: './logs/out.log',
