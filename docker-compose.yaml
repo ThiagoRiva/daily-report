@@ -13,7 +13,9 @@ services:
     volumes:
       - app_data:/app/backend/database
     restart: unless-stopped
-    # SEM HEALTHCHECK - será gerenciado pelo Coolify
+    # HEALTHCHECK EXPLICITAMENTE DESABILITADO
+    healthcheck:
+      disable: true
 
 volumes:
   app_data:
