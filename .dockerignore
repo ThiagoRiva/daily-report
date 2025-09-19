@@ -1,19 +1,19 @@
+# Ignorar apenas para builds de backend
 node_modules
 npm-debug.log
 .git
 .gitignore
 README.md
-Dockerfile
 .dockerignore
-src/
 build/
-public/
 .env
 .env.local
 .env.development
-.env.production
 coverage/
 .nyc_output/
 *.log
 .DS_Store
 Thumbs.db
+
+# Para frontend, precisamos de src/ e public/
+# Para backend, precisamos da pasta backend/
