@@ -2,9 +2,11 @@
 
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const config = require('../config');
 
 // Conectar ao banco de dados
-const dbPath = path.join(__dirname, '../database/reports.db');
+const dbPath = path.resolve(config.dbPath);
+const dbDirectory = path.dirname(dbPath);
 const db = new sqlite3.Database(dbPath);
 
 async function cleanDuplicates() {
@@ -13,7 +15,7 @@ async function cleanDuplicates() {
   try {
     // 1. Backup de segurança
     console.log('📦 Criando backup de segurança...');
-    const backupPath = path.join(__dirname, `../database/backup_before_clean_${Date.now()}.db`);
+    const backupPath = path.join(dbDirectory, `backup_before_clean_${Date.now()}.db`);
     await new Promise((resolve, reject) => {
       db.exec(`VACUUM INTO '${backupPath}'`, (err) => {
         if (err) reject(err);

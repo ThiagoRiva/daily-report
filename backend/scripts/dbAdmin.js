@@ -2,9 +2,11 @@
 
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const config = require('../config');
 
 // Conectar ao banco de dados
-const dbPath = path.join(__dirname, '../database/reports.db');
+const dbPath = path.resolve(config.dbPath);
+const dbDirectory = path.dirname(dbPath);
 const db = new sqlite3.Database(dbPath);
 
 // Funções de administração
@@ -31,7 +33,7 @@ const commands = {
 
   // Criar usuário admin
   createAdmin: (nome, email, senha) => {
-    if (!nome || !email || senha) {
+    if (!nome || !email || !senha) {
       console.log('❌ Uso: node dbAdmin.js createAdmin "Nome" "email@empresa.com" "senha123"');
       return;
     }
@@ -88,7 +90,7 @@ const commands = {
   // Backup do banco
   backup: () => {
     const fs = require('fs');
-    const backupPath = path.join(__dirname, `../database/backup_${new Date().toISOString().split('T')[0]}.db`);
+    const backupPath = path.join(dbDirectory, `backup_${new Date().toISOString().split('T')[0]}.db`);
     
     db.serialize(() => {
       db.exec(`VACUUM INTO '${backupPath}'`, (err) => {

@@ -89,6 +89,12 @@ Um sistema web responsivo (mobile-first) para registrar e consolidar relatórios
 3. **Configurar subdomínio na Hostinger**
 4. **Fazer upload dos arquivos**
 
+### 🚀 Deploy com Coolify
+
+1. **Volume persistente**: No serviço do backend, monte um volume apontando para `/app/storage` para garantir que o arquivo `reports.db` seja preservado entre deploys.
+2. **Variável de ambiente**: Caso prefira outro caminho, defina a variável `DB_PATH` apontando para o arquivo dentro do volume (ex.: `/app/data/reports.db`).
+3. **Reconstruir a aplicação**: Após ajustar o volume ou a variável de ambiente, recrie o container para que o novo caminho seja aplicado.
+
 ## 📝 Como Usar
 
 ### 1. Relatório Diário de Atividades
