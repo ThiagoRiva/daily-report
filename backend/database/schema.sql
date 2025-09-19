@@ -15,7 +15,8 @@ CREATE TABLE IF NOT EXISTS usinas (
     ativo BOOLEAN DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (cluster_id) REFERENCES clusters(id)
+    FOREIGN KEY (cluster_id) REFERENCES clusters(id),
+    UNIQUE(nome, cluster_id)
 );
 
 -- Tabela de Técnicos
@@ -27,7 +28,8 @@ CREATE TABLE IF NOT EXISTS tecnicos (
     ativo BOOLEAN DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (cluster_id) REFERENCES clusters(id)
+    FOREIGN KEY (cluster_id) REFERENCES clusters(id),
+    UNIQUE(nome, cluster_id)
 );
 
 -- Tabela de Funções

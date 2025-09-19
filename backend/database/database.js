@@ -41,15 +41,29 @@ class Database {
   }
 
   seedData() {
-    const seedPath = path.join(__dirname, 'seedData.sql');
-    const seedSql = fs.readFileSync(seedPath, 'utf8');
-    
-    this.db.exec(seedSql, (err) => {
+    // Verificar se já existem dados antes de inserir
+    this.db.get('SELECT COUNT(*) as count FROM clusters', (err, row) => {
       if (err) {
-        console.error('Erro ao inserir dados iniciais:', err.message);
-      } else {
-        console.log('Dados iniciais inseridos com sucesso.');
+        console.error('Erro ao verificar dados existentes:', err.message);
+        return;
       }
+      
+      if (row.count > 0) {
+        console.log('Dados iniciais já existem. Pulando seed data.');
+        return;
+      }
+      
+      console.log('Inserindo dados iniciais...');
+      const seedPath = path.join(__dirname, 'seedData.sql');
+      const seedSql = fs.readFileSync(seedPath, 'utf8');
+      
+      this.db.exec(seedSql, (err) => {
+        if (err) {
+          console.error('Erro ao inserir dados iniciais:', err.message);
+        } else {
+          console.log('Dados iniciais inseridos com sucesso.');
+        }
+      });
     });
   }
 
@@ -61,9 +75,15 @@ class Database {
   createCluster(data, callback) {
     const { nome, ativo = 1 } = data;
     this.db.run(
-      'INSERT INTO clusters (nome, ativo) VALUES (?, ?)',
+      'INSERT OR IGNORE INTO clusters (nome, ativo) VALUES (?, ?)',
       [nome, ativo],
-      callback
+      function(err) {
+        if (err && err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+          callback(new Error('Cluster com este nome já existe'));
+        } else {
+          callback.call(this, err);
+        }
+      }
     );
   }
 
@@ -93,9 +113,15 @@ class Database {
   createUsina(data, callback) {
     const { nome, cluster_id, ativo = 1 } = data;
     this.db.run(
-      'INSERT INTO usinas (nome, cluster_id, ativo) VALUES (?, ?, ?)',
+      'INSERT OR IGNORE INTO usinas (nome, cluster_id, ativo) VALUES (?, ?, ?)',
       [nome, cluster_id, ativo],
-      callback
+      function(err) {
+        if (err && err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+          callback(new Error('Usina com este nome já existe neste cluster'));
+        } else {
+          callback.call(this, err);
+        }
+      }
     );
   }
 
@@ -125,9 +151,15 @@ class Database {
   createTecnico(data, callback) {
     const { nome, funcao, cluster_id, ativo = 1 } = data;
     this.db.run(
-      'INSERT INTO tecnicos (nome, funcao, cluster_id, ativo) VALUES (?, ?, ?, ?)',
+      'INSERT OR IGNORE INTO tecnicos (nome, funcao, cluster_id, ativo) VALUES (?, ?, ?, ?)',
       [nome, funcao, cluster_id, ativo],
-      callback
+      function(err) {
+        if (err && err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+          callback(new Error('Técnico com este nome já existe neste cluster'));
+        } else {
+          callback.call(this, err);
+        }
+      }
     );
   }
 
