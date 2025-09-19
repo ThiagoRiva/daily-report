@@ -9,6 +9,14 @@ RUN npm install --production
 # Copiar código do backend
 COPY backend/ ./
 
+# Debug: verificar estrutura de arquivos
+RUN ls -la ./
+RUN ls -la ./database/ || echo "Pasta database não existe"
+RUN ls -la ./middleware/ || echo "Pasta middleware não existe"
+
+# Criar pasta do banco se não existir
+RUN mkdir -p ./database
+
 EXPOSE 3000
 
 CMD ["node", "server.js"]
