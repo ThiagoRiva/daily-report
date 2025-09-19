@@ -88,109 +88,6 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ message: 'Logout realizado com sucesso' });
 });
 
-// ===== ROTAS DE GESTÃO DE USUÁRIOS (APENAS ADMIN) =====
-
-// Listar usuários
-app.get('/api/usuarios', (req, res) => {
-  // Verificar se é admin (proteção adicional)
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
-  }
-  db.db.all('SELECT id, nome, email, role, clusters_permitidos, ativo, created_at FROM usuarios ORDER BY nome', (err, rows) => {
-    if (err) {
-      console.error('Erro ao buscar usuários:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-    res.json(rows);
-  });
-});
-
-// Criar usuário
-app.post('/api/usuarios', auditMiddleware('CREATE', 'usuarios'), (req, res) => {
-  // Verificar se é admin (proteção adicional)
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
-  }
-  const { nome, email, senha, role, clustersPermitidos } = req.body;
-
-  if (!nome || !email || !senha || !role) {
-    return res.status(400).json({ error: 'Nome, email, senha e role são obrigatórios' });
-  }
-
-  // Hash da senha
-  bcrypt.hash(senha, 10, (err, senhaHash) => {
-    if (err) {
-      console.error('Erro ao gerar hash da senha:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-
-    db.db.run(
-      'INSERT INTO usuarios (nome, email, senha, role, clusters_permitidos, ativo) VALUES (?, ?, ?, ?, ?, ?)',
-      [nome, email, senhaHash, role, JSON.stringify(clustersPermitidos || []), 1],
-      function(err) {
-        if (err) {
-          if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-            return res.status(400).json({ error: 'Email já está em uso' });
-          }
-          console.error('Erro ao criar usuário:', err);
-          return res.status(500).json({ error: 'Erro interno do servidor' });
-        }
-        res.json({ id: this.lastID, message: 'Usuário criado com sucesso' });
-      }
-    );
-  });
-});
-
-// Atualizar usuário
-app.put('/api/usuarios/:id', auditMiddleware('UPDATE', 'usuarios'), (req, res) => {
-  // Verificar se é admin (proteção adicional)
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
-  }
-  const { nome, email, role, clustersPermitidos, ativo } = req.body;
-  const userId = req.params.id;
-
-  if (!nome || !email || !role) {
-    return res.status(400).json({ error: 'Nome, email e role são obrigatórios' });
-  }
-
-  db.db.run(
-    'UPDATE usuarios SET nome = ?, email = ?, role = ?, clusters_permitidos = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-    [nome, email, role, JSON.stringify(clustersPermitidos || []), ativo ? 1 : 0, userId],
-    function(err) {
-      if (err) {
-        if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-          return res.status(400).json({ error: 'Email já está em uso' });
-        }
-        console.error('Erro ao atualizar usuário:', err);
-        return res.status(500).json({ error: 'Erro interno do servidor' });
-      }
-      res.json({ message: 'Usuário atualizado com sucesso' });
-    }
-  );
-});
-
-// Excluir usuário
-app.delete('/api/usuarios/:id', auditMiddleware('DELETE', 'usuarios'), (req, res) => {
-  // Verificar se é admin (proteção adicional)
-  if (!req.user || req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
-  }
-  const userId = req.params.id;
-
-  // Não permitir exclusão do próprio usuário admin
-  if (parseInt(userId) === req.user.id) {
-    return res.status(400).json({ error: 'Não é possível excluir seu próprio usuário' });
-  }
-
-  db.db.run('DELETE FROM usuarios WHERE id = ?', [userId], function(err) {
-    if (err) {
-      console.error('Erro ao excluir usuário:', err);
-      return res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-    res.json({ message: 'Usuário excluído com sucesso' });
-  });
-});
 
 // Middleware para logging
 app.use((req, res, next) => {
@@ -436,6 +333,113 @@ app.delete('/api/status-tecnico/:id', (req, res) => {
       return;
     }
     res.json({ message: 'Status técnico excluído com sucesso' });
+  });
+});
+
+// ===== ROTAS DE GESTÃO DE USUÁRIOS (APENAS ADMIN) =====
+
+// Listar usuários
+app.get('/api/usuarios', (req, res) => {
+  // Verificar se é admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
+  }
+  db.db.all('SELECT id, nome, email, role, clusters_permitidos, ativo, created_at FROM usuarios ORDER BY nome', (err, rows) => {
+    if (err) {
+      console.error('Erro ao buscar usuários:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+    res.json(rows);
+  });
+});
+
+// Criar usuário
+app.post('/api/usuarios', (req, res) => {
+  // Verificar se é admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
+  }
+  
+  const { nome, email, senha, role, clustersPermitidos } = req.body;
+
+  if (!nome || !email || !senha || !role) {
+    return res.status(400).json({ error: 'Nome, email, senha e role são obrigatórios' });
+  }
+
+  // Hash da senha
+  bcrypt.hash(senha, 10, (err, senhaHash) => {
+    if (err) {
+      console.error('Erro ao gerar hash da senha:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+
+    db.db.run(
+      'INSERT INTO usuarios (nome, email, senha, role, clusters_permitidos, ativo) VALUES (?, ?, ?, ?, ?, ?)',
+      [nome, email, senhaHash, role, JSON.stringify(clustersPermitidos || []), 1],
+      function(err) {
+        if (err) {
+          if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+            return res.status(400).json({ error: 'Email já está em uso' });
+          }
+          console.error('Erro ao criar usuário:', err);
+          return res.status(500).json({ error: 'Erro interno do servidor' });
+        }
+        res.json({ id: this.lastID, message: 'Usuário criado com sucesso' });
+      }
+    );
+  });
+});
+
+// Atualizar usuário
+app.put('/api/usuarios/:id', (req, res) => {
+  // Verificar se é admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
+  }
+  
+  const { nome, email, role, clustersPermitidos, ativo } = req.body;
+  const userId = req.params.id;
+
+  if (!nome || !email || !role) {
+    return res.status(400).json({ error: 'Nome, email e role são obrigatórios' });
+  }
+
+  db.db.run(
+    'UPDATE usuarios SET nome = ?, email = ?, role = ?, clusters_permitidos = ?, ativo = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+    [nome, email, role, JSON.stringify(clustersPermitidos || []), ativo ? 1 : 0, userId],
+    function(err) {
+      if (err) {
+        if (err.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+          return res.status(400).json({ error: 'Email já está em uso' });
+        }
+        console.error('Erro ao atualizar usuário:', err);
+        return res.status(500).json({ error: 'Erro interno do servidor' });
+      }
+      res.json({ message: 'Usuário atualizado com sucesso' });
+    }
+  );
+});
+
+// Excluir usuário
+app.delete('/api/usuarios/:id', (req, res) => {
+  // Verificar se é admin
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ error: 'Apenas administradores podem gerenciar usuários' });
+  }
+  
+  const userId = req.params.id;
+
+  // Não permitir exclusão do próprio usuário admin
+  if (parseInt(userId) === req.user.id) {
+    return res.status(400).json({ error: 'Não é possível excluir seu próprio usuário' });
+  }
+
+  db.db.run('DELETE FROM usuarios WHERE id = ?', [userId], function(err) {
+    if (err) {
+      console.error('Erro ao excluir usuário:', err);
+      return res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+    res.json({ message: 'Usuário excluído com sucesso' });
   });
 });
 
