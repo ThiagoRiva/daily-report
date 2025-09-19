@@ -335,7 +335,7 @@ app.delete('/api/status-tecnico/:id', (req, res) => {
 });
 
 // Rota para dados consolidados (para compatibilidade com frontend)
-app.get('/api/data', (req, res) => {
+app.get('/api/data', clusterFilterMiddleware, (req, res) => {
   // Buscar todos os dados em paralelo
   const promises = [
     new Promise((resolve, reject) => db.getAllClusters((err, rows) => err ? reject(err) : resolve(rows))),
@@ -348,14 +348,24 @@ app.get('/api/data', (req, res) => {
 
   Promise.all(promises)
     .then(([clusters, usinas, tecnicos, funcoes, atividades, statusTecnico]) => {
-      res.json({
-        clusters,
-        usinas,
-        tecnicos,
-        funcoes,
-        atividades,
-        statusTecnico
-      });
+      // Aplicar filtros baseados nas permissões do usuário
+      let filteredData = { clusters, usinas, tecnicos, funcoes, atividades, statusTecnico };
+      
+      // Se não for admin/coordenador, filtrar por clusters permitidos
+      if (req.user.role !== 'admin' && req.user.role !== 'coordenador') {
+        const clustersPermitidos = req.clustersPermitidos || [];
+        
+        filteredData = {
+          clusters: clusters.filter(c => clustersPermitidos.includes(parseInt(c.id))),
+          usinas: usinas.filter(u => clustersPermitidos.includes(parseInt(u.cluster_id))),
+          tecnicos: tecnicos.filter(t => !t.cluster_id || clustersPermitidos.includes(parseInt(t.cluster_id))),
+          funcoes,
+          atividades: atividades.filter(a => clustersPermitidos.includes(parseInt(a.cluster_id))),
+          statusTecnico: statusTecnico.filter(s => clustersPermitidos.includes(parseInt(s.cluster_id)))
+        };
+      }
+      
+      res.json(filteredData);
     })
     .catch(err => {
       res.status(500).json({ error: err.message });

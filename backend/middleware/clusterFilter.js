@@ -11,8 +11,14 @@ const clusterFilterMiddleware = (req, res, next) => {
 
   // Para técnicos, aplicar filtro de cluster
   try {
-    const clustersPermitidos = req.user.clusters_permitidos ? 
-      JSON.parse(req.user.clusters_permitidos) : [];
+    let clustersPermitidos = [];
+    
+    if (req.user.clusters_permitidos) {
+      // Se já é array, usar diretamente; se é string, fazer parse
+      clustersPermitidos = typeof req.user.clusters_permitidos === 'string' ? 
+        JSON.parse(req.user.clusters_permitidos) : 
+        req.user.clusters_permitidos;
+    }
     
     if (clustersPermitidos.length === 0) {
       return res.status(403).json({ error: 'Usuário não tem acesso a nenhum cluster' });
