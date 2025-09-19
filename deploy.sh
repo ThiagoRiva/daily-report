@@ -1,176 +1,154 @@
 #!/bin/bash
 
-# Script de Deploy para Hostinger
-# Execute este script para preparar os arquivos para upload
+echo "🚀 Iniciando deploy do Sistema de Relatórios Diários..."
 
-echo "🚀 Iniciando processo de deploy..."
+# Cores para output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-# Limpar builds anteriores
-echo "🧹 Limpando builds anteriores..."
-rm -rf build/
-rm -rf backend/logs/
+# Função para log
+log() {
+    echo -e "${GREEN}[$(date +'%Y-%m-%d %H:%M:%S')]${NC} $1"
+}
 
-# Instalar dependências do frontend
-echo "📦 Instalando dependências do frontend..."
-yarn install
+error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
 
-# Instalar dependências do backend
-echo "📦 Instalando dependências do backend..."
+warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+# Verificar se está no diretório correto
+if [ ! -f "package.json" ]; then
+    error "Execute este script na raiz do projeto!"
+    exit 1
+fi
+
+# 1. Fazer backup do banco de dados
+log "Fazendo backup do banco de dados..."
+if [ -f "backend/database/reports.db" ]; then
+    BACKUP_DIR="backups"
+    mkdir -p $BACKUP_DIR
+    DATE=$(date +%Y%m%d_%H%M%S)
+    cp backend/database/reports.db "$BACKUP_DIR/reports_backup_$DATE.db"
+    log "Backup criado: $BACKUP_DIR/reports_backup_$DATE.db"
+else
+    warning "Banco de dados não encontrado, pulando backup..."
+fi
+
+# 2. Instalar dependências
+log "Instalando dependências do frontend..."
+npm install
+
+log "Instalando dependências do backend..."
+cd backend && npm install && cd ..
+
+# 3. Build do frontend
+log "Criando build de produção do React..."
+npm run build
+
+if [ ! -d "build" ]; then
+    error "Build do React falhou!"
+    exit 1
+fi
+
+log "Build criado com sucesso!"
+
+# 4. Verificar estrutura do projeto
+log "Verificando estrutura do projeto..."
+REQUIRED_FILES=("build/index.html" "backend/server.js" "backend/database/schema.sql")
+
+for file in "${REQUIRED_FILES[@]}"; do
+    if [ ! -f "$file" ]; then
+        error "Arquivo obrigatório não encontrado: $file"
+        exit 1
+    fi
+done
+
+log "Estrutura do projeto verificada!"
+
+# 5. Criar arquivo .env.production se não existir
+if [ ! -f ".env.production" ]; then
+    log "Criando arquivo .env.production..."
+    cat > .env.production << EOF
+# Configurações de Produção
+NODE_ENV=production
+PORT=3001
+JWT_SECRET=MUDE_ESTA_CHAVE_EM_PRODUCAO_256_BITS_SEGURA
+DATABASE_PATH=./backend/database/reports.db
+
+# Frontend (usado durante o build) - HOSTINGER
+REACT_APP_API_URL=https://api.report.thiagoriva.com/api
+EOF
+    warning "Arquivo .env.production criado! LEMBRE-SE de configurar suas variáveis!"
+fi
+
+# 6. Testar se o banco de dados pode ser inicializado
+log "Testando inicialização do banco de dados..."
 cd backend
-yarn install
+node -e "
+const db = require('./database/database.js');
+console.log('✅ Banco de dados OK');
+process.exit(0);
+" || {
+    error "Erro ao testar banco de dados!"
+    exit 1
+}
 cd ..
 
-# Build do frontend para produção
-echo "🏗️ Construindo frontend para produção..."
-REACT_APP_API_URL="https://report.thiagoriva.com/api" yarn build
+# 7. Criar scripts auxiliares
+log "Criando scripts auxiliares..."
 
-# Criar estrutura de deploy
-echo "📁 Criando estrutura de deploy..."
-mkdir -p deploy/public_html
-mkdir -p deploy/api
-mkdir -p deploy/api/database
-mkdir -p deploy/api/logs
-
-# Copiar arquivos do frontend (build)
-echo "📋 Copiando arquivos do frontend..."
-cp -r build/* deploy/public_html/
-
-# Copiar arquivos do backend
-echo "📋 Copiando arquivos do backend..."
-cp backend/server.js deploy/api/
-cp backend/config.js deploy/api/
-cp -r backend/database deploy/api/
-cp backend/package.json deploy/api/
-cp backend/yarn.lock deploy/api/
-cp backend/ecosystem.config.js deploy/api/
-
-# Criar arquivo .htaccess para SPA (Single Page Application)
-echo "⚙️ Criando .htaccess..."
-cat > deploy/public_html/.htaccess << 'EOF'
-Options -MultiViews
-RewriteEngine On
-
-# Handle Angular and React Router
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.html [QSA,L]
-
-# Gzip compression
-<IfModule mod_deflate.c>
-    AddOutputFilterByType DEFLATE text/plain
-    AddOutputFilterByType DEFLATE text/html
-    AddOutputFilterByType DEFLATE text/xml
-    AddOutputFilterByType DEFLATE text/css
-    AddOutputFilterByType DEFLATE application/xml
-    AddOutputFilterByType DEFLATE application/xhtml+xml
-    AddOutputFilterByType DEFLATE application/rss+xml
-    AddOutputFilterByType DEFLATE application/javascript
-    AddOutputFilterByType DEFLATE application/x-javascript
-</IfModule>
-
-# Browser caching
-<IfModule mod_expires.c>
-    ExpiresActive on
-    ExpiresByType text/css "access plus 1 year"
-    ExpiresByType application/javascript "access plus 1 year"
-    ExpiresByType image/png "access plus 1 year"
-    ExpiresByType image/jpg "access plus 1 year"
-    ExpiresByType image/jpeg "access plus 1 year"
-</IfModule>
+# Script de inicialização do banco
+cat > init_production_db.sh << 'EOF'
+#!/bin/bash
+echo "🗄️ Inicializando banco de dados de produção..."
+cd backend
+node -e "
+const db = require('./database/database.js');
+console.log('Banco inicializado com sucesso!');
+"
+echo "✅ Banco de dados pronto!"
 EOF
+chmod +x init_production_db.sh
 
-# Criar arquivo de configuração para produção
-cat > deploy/api/config.prod.js << 'EOF'
-module.exports = {
-  port: process.env.PORT || 3001,
-  dbPath: process.env.DB_PATH || './database/reports.db',
-  corsOrigin: process.env.CORS_ORIGIN || 'https://report.thiagoriva.com',
-  nodeEnv: 'production'
-};
+# Script para criar usuário admin
+cat > create_admin.sh << 'EOF'
+#!/bin/bash
+echo "👤 Criando usuário administrador..."
+echo "Digite os dados do administrador:"
+read -p "Nome: " nome
+read -p "Email: " email
+read -s -p "Senha: " senha
+echo ""
+
+cd backend
+node scripts/dbAdmin.js createAdmin "$nome" "$email" "$senha"
 EOF
+chmod +x create_admin.sh
 
-# Criar README de deploy
-cat > deploy/README-DEPLOY.md << 'EOF'
-# Instruções de Deploy - Sistema de Relatórios Diários
+log "Scripts auxiliares criados!"
 
-## Estrutura de Arquivos
-
-```
-deploy/
-├── public_html/          # Arquivos do frontend (React build)
-│   ├── index.html
-│   ├── static/
-│   └── .htaccess
-└── api/                  # Arquivos do backend (Node.js)
-    ├── server.js
-    ├── config.js
-    ├── package.json
-    ├── ecosystem.config.js
-    └── database/
-```
-
-## Passos para Deploy na Hostinger
-
-### 1. Frontend (React)
-1. Faça upload do conteúdo da pasta `public_html/` para a pasta raiz do seu subdomínio
-2. Certifique-se que o arquivo `.htaccess` foi enviado
-
-### 2. Backend (Node.js API)
-1. Crie um subdiretório `api/` na raiz do seu domínio
-2. Faça upload do conteúdo da pasta `api/` para esse diretório
-3. No painel da Hostinger, vá em "Avançado" > "Cron Jobs"
-4. Adicione um cron job para manter a API rodando:
-   ```
-   */5 * * * * cd /home/usuario/public_html/api && node server.js > /dev/null 2>&1 &
-   ```
-
-### 3. Configuração do Subdomínio
-1. No painel da Hostinger, vá em "Domínios" > "Subdomínios"
-2. Crie um subdomínio (ex: `relatorios.seudominio.com.br`)
-3. Aponte para a pasta onde você fez upload dos arquivos
-
-### 4. Banco de Dados
-- O SQLite será criado automaticamente na primeira execução
-- O arquivo ficará em `api/database/reports.db`
-- Faça backup regular deste arquivo
-
-### 5. Logs
-- Os logs da API ficarão em `api/logs/`
-- Monitore regularmente para verificar erros
-
-## URLs Finais
-- Frontend: https://report.thiagoriva.com
-- API: https://report.thiagoriva.com/api
-
-## Teste
-Após o deploy, teste:
-1. Acesse a URL do frontend
-2. Verifique se aparece "Banco de dados conectado" na tela inicial
-3. Tente criar um relatório de teste
-
-## Manutenção
-- Para atualizar: repita o processo de build e upload
-- Para backup: baixe o arquivo `api/database/reports.db`
-- Para logs: verifique `api/logs/`
-EOF
-
-# Criar arquivo ZIP para upload fácil
-echo "📦 Criando arquivo ZIP..."
-cd deploy
-zip -r ../sistema-relatorios-deploy.zip .
-cd ..
-
-echo "✅ Deploy preparado com sucesso!"
+# 8. Resumo final
 echo ""
-echo "📁 Arquivos prontos em: ./deploy/"
-echo "📦 Arquivo ZIP: ./sistema-relatorios-deploy.zip"
+echo "🎉 Deploy preparado com sucesso!"
 echo ""
-echo "📋 Próximos passos:"
-echo "1. Leia o arquivo deploy/README-DEPLOY.md"
-echo "2. Configure seu subdomínio na Hostinger"
-echo "3. Faça upload dos arquivos"
-echo "4. Teste a aplicação"
+echo "📋 PRÓXIMOS PASSOS:"
+echo "1. Configure as variáveis em .env.production"
+echo "2. Envie os arquivos para seu servidor"
+echo "3. No servidor, execute: ./init_production_db.sh"
+echo "4. No servidor, execute: ./create_admin.sh"
+echo "5. Configure PM2 com: pm2 start ecosystem.config.js"
+echo "6. Configure Nginx conforme o DEPLOY_GUIDE.md"
 echo ""
-echo "🌐 URLs após deploy:"
-echo "Frontend: https://report.thiagoriva.com"
-echo "API: https://report.thiagoriva.com/api"
+echo "📁 ARQUIVOS IMPORTANTES:"
+echo "- build/ (frontend compilado)"
+echo "- backend/ (API)"
+echo "- ecosystem.config.js (configuração PM2)"
+echo "- .env.production (variáveis de ambiente)"
+echo "- DEPLOY_GUIDE.md (guia completo)"
+echo ""
+echo "🔗 Consulte o DEPLOY_GUIDE.md para instruções detalhadas!"
