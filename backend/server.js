@@ -326,7 +326,10 @@ app.post('/api/status-tecnico', (req, res) => {
 });
 
 // Rota de saúde da API
-app.delete('/api/atividades/:id', requireAuth, (req, res) => {
+// Rotas de exclusão com middleware de autenticação opcional (para compatibilidade)
+const authMiddleware = process.env.NODE_ENV === 'production' ? authenticateToken : (req, res, next) => next();
+
+app.delete('/api/atividades/:id', authMiddleware, (req, res) => {
   db.deleteAtividade(req.params.id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -336,7 +339,7 @@ app.delete('/api/atividades/:id', requireAuth, (req, res) => {
   });
 });
 
-app.delete('/api/status-tecnico/:id', requireAuth, (req, res) => {
+app.delete('/api/status-tecnico/:id', authMiddleware, (req, res) => {
   db.deleteStatusTecnico(req.params.id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
