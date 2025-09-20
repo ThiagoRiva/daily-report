@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS status_tecnico (
     cluster_id INTEGER NOT NULL,
     usina_id INTEGER NOT NULL,
     tecnico_id INTEGER NOT NULL,
+    tecnicos_nomes TEXT, -- Nomes de todos os técnicos separados por vírgula
     
     -- Inversores
     inversores_ok100 BOOLEAN DEFAULT 1,
