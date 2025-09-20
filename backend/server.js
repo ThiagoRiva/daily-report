@@ -325,7 +325,6 @@ app.post('/api/status-tecnico', (req, res) => {
   });
 });
 
-// Rota de saúde da API
 // Rotas de exclusão com middleware de autenticação opcional (para compatibilidade)
 const authMiddleware = process.env.NODE_ENV === 'production' ? authenticateToken : (req, res, next) => next();
 
