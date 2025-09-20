@@ -1,3 +1,19 @@
+-- Tabela de Usuários
+CREATE TABLE IF NOT EXISTS usuarios (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome VARCHAR(150) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'tecnico',
+    clusters_permitidos TEXT DEFAULT '[]',
+    ativo BOOLEAN DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuarios_email ON usuarios(email);
+CREATE INDEX IF NOT EXISTS idx_usuarios_ativo ON usuarios(ativo);
+
 -- Tabela de Clusters
 CREATE TABLE IF NOT EXISTS clusters (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -104,3 +120,22 @@ CREATE INDEX IF NOT EXISTS idx_status_data ON status_tecnico(data);
 CREATE INDEX IF NOT EXISTS idx_status_cluster ON status_tecnico(cluster_id);
 CREATE INDEX IF NOT EXISTS idx_status_usina ON status_tecnico(usina_id);
 CREATE INDEX IF NOT EXISTS idx_status_tecnico ON status_tecnico(tecnico_id);
+
+-- Tabela de Auditoria
+CREATE TABLE IF NOT EXISTS auditoria (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL,
+    acao VARCHAR(50) NOT NULL,
+    tabela VARCHAR(100) NOT NULL,
+    registro_id INTEGER,
+    dados_antes TEXT,
+    dados_depois TEXT NOT NULL,
+    ip_address VARCHAR(100),
+    user_agent TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_auditoria_usuario ON auditoria(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_auditoria_tabela ON auditoria(tabela);
+CREATE INDEX IF NOT EXISTS idx_auditoria_created_at ON auditoria(created_at);
