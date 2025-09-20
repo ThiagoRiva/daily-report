@@ -194,7 +194,7 @@ const SharedFilters = ({
           <h4 className="text-sm font-medium text-gray-700 mb-2">Resumo:</h4>
           <div className="text-sm text-gray-600 space-y-1">
             {data && (
-              <p><span className="font-medium">Data:</span> {new Date(data).toLocaleDateString('pt-BR')}</p>
+              <p><span className="font-medium">Data:</span> {data.split('-').reverse().join('/')}</p>
             )}
             {clusterId && (
               <p><span className="font-medium">Cluster:</span> {filteredClusters.find(c => c.id === clusterId)?.nome}</p>

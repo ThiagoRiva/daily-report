@@ -15,7 +15,7 @@ import { useData } from '../context/DataContext';
 import { 
   generateConsolidatedTechnicalStatusWhatsApp
 } from '../utils/whatsappGenerator';
-import { format } from 'date-fns';
+// import { format } from 'date-fns'; // Removido para evitar problemas de fuso horário
 import ConfirmationModal from './ConfirmationModal';
 
 const ManagementScreen = ({ onBack }) => {
@@ -160,7 +160,7 @@ const ManagementScreen = ({ onBack }) => {
       Object.keys(resumoPorTecnico).forEach(tecnicoName => {
         message += `👷 *${tecnicoName}*\n`;
         resumoPorTecnico[tecnicoName].forEach(item => {
-          message += `📍 ${item.usinaName} - ${format(new Date(item.data), 'dd/MM')}: ${item.tarefa}\n`;
+          message += `📍 ${item.usinaName} - ${item.data.split('-').reverse().join('/').substring(0, 5)}: ${item.tarefa}\n`;
         });
         message += '\n';
       });
@@ -298,8 +298,8 @@ const ManagementScreen = ({ onBack }) => {
     
     // Informações dos filtros
     const filterInfo = [
-      filters.dataInicio && `Data início: ${format(new Date(filters.dataInicio), 'dd/MM/yyyy')}`,
-      filters.dataFim && `Data fim: ${format(new Date(filters.dataFim), 'dd/MM/yyyy')}`,
+      filters.dataInicio && `Data início: ${filters.dataInicio.split('-').reverse().join('/')}`,
+      filters.dataFim && `Data fim: ${filters.dataFim.split('-').reverse().join('/')}`,
       filters.clusterId && `Cluster: ${data.clusters.find(c => c.id === filters.clusterId)?.nome}`,
       filters.usinaId && `Usina: ${data.usinas.find(u => u.id === filters.usinaId)?.nome}`,
       filters.tecnicoId && `Técnico: ${data.tecnicos.find(t => t.id === filters.tecnicoId)?.nome}`
@@ -328,9 +328,9 @@ const ManagementScreen = ({ onBack }) => {
         <div class="record">
           <div class="record-header">${usina?.nome || 'Usina não encontrada'}</div>
           <div class="record-meta">
-            📅 ${format(new Date(item.data), 'dd/MM/yyyy')} | 
+            📅 ${item.data.split('-').reverse().join('/')} | 
             📍 ${cluster?.nome || 'Cluster não encontrado'} | 
-            👷 ${tecnico?.nome || 'Técnico não encontrado'}
+            👷 ${item.tecnicosNomes || tecnico?.nome || 'Técnico não encontrado'}
           </div>
           <div class="record-content">
       `;
@@ -658,13 +658,13 @@ const ManagementScreen = ({ onBack }) => {
                     <div>
                       <div className="flex items-center text-sm text-gray-500 mb-1">
                         <Calendar className="w-4 h-4 mr-1" />
-                        {format(new Date(item.data), 'dd/MM/yyyy')}
+                {item.data.split('-').reverse().join('/')}
                         <span className="mx-2">•</span>
                         <MapPin className="w-4 h-4 mr-1" />
                         {cluster?.nome}
                         <span className="mx-2">•</span>
                         <User className="w-4 h-4 mr-1" />
-                        {tecnico?.nome}
+                        {item.tecnicosNomes || tecnico?.nome}
                       </div>
                       <h4 className="font-semibold text-gray-900">{usina?.nome}</h4>
                     </div>
@@ -749,9 +749,9 @@ const ManagementScreen = ({ onBack }) => {
                         {groupedData[clusterName][usinaName].map((item, index) => (
                           <div key={index} className="bg-gray-50 rounded p-3 text-sm">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium">{item.tecnicoName}</span>
+                              <span className="font-medium">{item.tecnicosNomes || item.tecnicoName}</span>
                               <span className="text-gray-500">
-                                {format(new Date(item.data), 'dd/MM')}
+{item.data.split('-').reverse().join('/').substring(0, 5)}
                               </span>
                             </div>
                             

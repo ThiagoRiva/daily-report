@@ -3,7 +3,7 @@ import { ArrowLeft, Zap, Database, Settings, Copy, Printer } from 'lucide-react'
 import { useData } from '../context/DataContext';
 import SharedFilters from './SharedFilters';
 import SubsystemCard from './SubsystemCard';
-import { format } from 'date-fns';
+// import { format } from 'date-fns'; // Removido para evitar problemas de fuso horário
 import { 
   generateTechnicalStatusWhatsApp, 
   generateConsolidatedTechnicalStatusWhatsApp 
@@ -136,19 +136,22 @@ const TechnicalStatusScreen = ({ onBack, quickMode = false }) => {
         await updateStatusTecnico(statusAtualizado);
         alert('Status de equipamentos atualizado com sucesso!');
       } else {
-        // Salvar novo status para cada técnico selecionado
-        for (const tecnicoId of filters.tecnicoIds) {
-          const statusToSave = {
-            data: filters.data,
-            clusterId: filters.clusterId,
-            usinaId: filters.usinaId,
-            tecnicoId: tecnicoId,
-            ...statusData
-          };
+        // Salvar apenas um status por usina com todos os técnicos separados por vírgula
+        const tecnicosNomes = filters.tecnicoIds
+          .map(id => data.tecnicos.find(t => t.id === id)?.nome)
+          .filter(nome => nome)
+          .join(', ');
+        
+        const statusToSave = {
+          data: filters.data,
+          clusterId: filters.clusterId,
+          usinaId: filters.usinaId,
+          tecnicoId: filters.tecnicoIds[0], // ID do primeiro técnico para compatibilidade
+          tecnicosNomes: tecnicosNomes, // Nomes de todos os técnicos separados por vírgula
+          ...statusData
+        };
 
-          await addStatusTecnico(statusToSave);
-        }
-
+        await addStatusTecnico(statusToSave);
         alert('Status de equipamentos salvo com sucesso!');
       }
       
@@ -266,7 +269,7 @@ const TechnicalStatusScreen = ({ onBack, quickMode = false }) => {
 
   // Gerar conteúdo do PDF completo com todas as usinas
   const generatePDFContentCompleto = (clusterName, statusDoCluster) => {
-    const dataFormatada = format(new Date(filters.data), 'dd/MM/yyyy');
+    const dataFormatada = filters.data.split('-').reverse().join('/');
     
     let content = `
       <div class="header">
