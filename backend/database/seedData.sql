@@ -62,8 +62,12 @@ INSERT OR IGNORE INTO tecnicos (nome, funcao, cluster_id, ativo) VALUES
 ('Igor Souza', 'Mantenedor', 5, 1);
 
 -- Inserir Funções
-INSERT OR IGNORE INTO funcoes (nome, descricao) VALUES 
+INSERT OR IGNORE INTO funcoes (nome, descricao) VALUES
 ('Eletricista', 'Responsável por atividades elétricas'),
 ('Técnico de Campo', 'Atividades gerais de campo'),
 ('Supervisor', 'Supervisão de equipes'),
 ('Operador', 'Operação de equipamentos');
+
+-- Inserir usuário administrador padrão
+INSERT OR IGNORE INTO usuarios (nome, email, senha, role, clusters_permitidos, ativo) VALUES
+('Administrador', 'admin@empresa.com', '$2b$10$nFDmklUI.PwcBea56kC8kujkQnaILRnr4E8JU1JebTjYtTdiQcHES', 'admin', '[1,2,3,4,5]', 1);

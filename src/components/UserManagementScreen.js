@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Plus, Save, X, Users, Shield, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import apiService from '../services/api';
 import ConfirmationModal from './ConfirmationModal';
 
 const UserManagementScreen = ({ onBack }) => {
@@ -27,16 +28,8 @@ const UserManagementScreen = ({ onBack }) => {
   useEffect(() => {
     const carregarUsuarios = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/usuarios', {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setUsuarios(data);
-        }
+        const data = await apiService.get('/usuarios');
+        setUsuarios(data);
       } catch (error) {
         console.error('Erro ao carregar usuários:', error);
       } finally {
@@ -86,13 +79,6 @@ const UserManagementScreen = ({ onBack }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const url = editingUser 
-        ? `http://localhost:3001/api/usuarios/${editingUser.id}`
-        : 'http://localhost:3001/api/usuarios';
-      
-      const method = editingUser ? 'PUT' : 'POST';
-      
       const body = {
         nome: userData.nome,
         email: userData.email,
@@ -100,53 +86,40 @@ const UserManagementScreen = ({ onBack }) => {
         clustersPermitidos: userData.clustersPermitidos || [],
         ativo: userData.ativo !== false
       };
-      
+
       if (!editingUser) {
         body.senha = userData.senha;
       }
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-      });
+      const endpoint = editingUser ? `/usuarios/${editingUser.id}` : '/usuarios';
 
-      const result = await response.json();
-
-      if (response.ok) {
-        alert(editingUser ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
-        
-        // Se editou o próprio usuário, forçar logout para renovar token
-        if (editingUser && editingUser.id === user.id) {
-          alert('Seus dados foram atualizados. Você será redirecionado para fazer login novamente.');
-          localStorage.removeItem('token');
-          window.location.reload();
-          return;
-        }
-        
-        // Recarregar lista de usuários
-        const usersResponse = await fetch('http://localhost:3001/api/usuarios', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (usersResponse.ok) {
-          const updatedUsers = await usersResponse.json();
-          setUsuarios(updatedUsers);
-        }
-        
-        // Limpar formulário
-        setShowAddForm(false);
-        setEditingUser(null);
-        setNewUser({ nome: '', email: '', senha: '', role: 'tecnico', clustersPermitidos: [] });
+      if (editingUser) {
+        await apiService.put(endpoint, body);
       } else {
-        alert(`Erro: ${result.error}`);
+        await apiService.post(endpoint, body);
       }
+
+      alert(editingUser ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
+
+      // Se editou o próprio usuário, forçar logout para renovar token
+      if (editingUser && editingUser.id === user.id) {
+        alert('Seus dados foram atualizados. Você será redirecionado para fazer login novamente.');
+        localStorage.removeItem('token');
+        window.location.reload();
+        return;
+      }
+
+      // Recarregar lista de usuários
+      const updatedUsers = await apiService.get('/usuarios');
+      setUsuarios(updatedUsers);
+
+      // Limpar formulário
+      setShowAddForm(false);
+      setEditingUser(null);
+      setNewUser({ nome: '', email: '', senha: '', role: 'tecnico', clustersPermitidos: [] });
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
-      alert('Erro ao salvar usuário. Tente novamente.');
+      alert(error?.message ? `Erro: ${error.message}` : 'Erro ao salvar usuário. Tente novamente.');
     }
   };
 
@@ -154,36 +127,17 @@ const UserManagementScreen = ({ onBack }) => {
     if (!confirmModal.user) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3001/api/usuarios/${confirmModal.user.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      await apiService.delete(`/usuarios/${confirmModal.user.id}`);
+      alert('Usuário excluído com sucesso!');
 
-      const result = await response.json();
-
-      if (response.ok) {
-        alert('Usuário excluído com sucesso!');
-        
-        // Recarregar lista
-        const usersResponse = await fetch('http://localhost:3001/api/usuarios', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (usersResponse.ok) {
-          const updatedUsers = await usersResponse.json();
-          setUsuarios(updatedUsers);
-        }
-      } else {
-        alert(`Erro: ${result.error}`);
-      }
+      // Recarregar lista
+      const updatedUsers = await apiService.get('/usuarios');
+      setUsuarios(updatedUsers);
     } catch (error) {
       console.error('Erro ao excluir usuário:', error);
-      alert('Erro ao excluir usuário. Tente novamente.');
+      alert(error?.message ? `Erro: ${error.message}` : 'Erro ao excluir usuário. Tente novamente.');
     }
-    
+
     setConfirmModal({ isOpen: false, user: null });
   };
 
