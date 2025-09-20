@@ -326,7 +326,7 @@ app.post('/api/status-tecnico', (req, res) => {
 });
 
 // Rota de saúde da API
-app.delete('/api/atividades/:id', requireAuth, (req, res) => {
+app.delete('/api/atividades/:id', (req, res) => {
   db.deleteAtividade(req.params.id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
@@ -336,7 +336,7 @@ app.delete('/api/atividades/:id', requireAuth, (req, res) => {
   });
 });
 
-app.delete('/api/status-tecnico/:id', requireAuth, (req, res) => {
+app.delete('/api/status-tecnico/:id', (req, res) => {
   db.deleteStatusTecnico(req.params.id, function(err) {
     if (err) {
       res.status(500).json({ error: err.message });
