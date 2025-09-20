@@ -1040,7 +1040,7 @@ const DailyReportScreen = ({ onBack, quickMode = false }) => {
                                         )}
                                         {falha.previsaoInspecao && (
                                           <p className="text-xs text-blue-700 mt-1">
-                                            📅 {new Date(falha.previsaoInspecao).toLocaleDateString('pt-BR')}
+                                            📅 {falha.previsaoInspecao.split('-').reverse().join('/')}
                                           </p>
                                         )}
                                       </div>

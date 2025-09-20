@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+// import { format } from 'date-fns'; // Removido para evitar problemas de fuso horário
 
 // Gerar relatório diário de atividades
 export const generateDailyReportWhatsApp = ({ 
@@ -10,7 +10,7 @@ export const generateDailyReportWhatsApp = ({
   tcuComFalha, 
   observacoesGerais 
 }) => {
-  const dataFormatada = format(new Date(data), 'dd/MM/yyyy');
+  const dataFormatada = data.split('-').reverse().join('/');
   
   // Gerar linhas de atividades numeradas
   const linhasAtividades = atividades
@@ -42,7 +42,7 @@ export const generateDailyReportWhatsApp = ({
         }
         
         if (falha.previsaoInspecao) {
-          const dataPrevisao = format(new Date(falha.previsaoInspecao), 'dd/MM/yyyy');
+          const dataPrevisao = falha.previsaoInspecao.split('-').reverse().join('/');
           detalhes += ` - Previsão: ${dataPrevisao}`;
         }
         
@@ -78,7 +78,7 @@ export const generateTechnicalStatusWhatsApp = ({
   trackers, 
   observacoesGerais 
 }) => {
-  const dataFormatada = format(new Date(data), 'dd/MM/yyyy');
+  const dataFormatada = data.split('-').reverse().join('/');
   
   // Função auxiliar para gerar status de subsistema
   const gerarStatusSubsistema = (subsistema, nome) => {
@@ -111,7 +111,7 @@ ${gerarStatusSubsistema(trackers, 'Trackers')}
 
 // Gerar status técnico consolidado por cluster
 export const generateConsolidatedTechnicalStatusWhatsApp = (statusTecnicoArray, cluster, data) => {
-  const dataFormatada = format(new Date(data), 'dd/MM/yyyy');
+  const dataFormatada = data.split('-').reverse().join('/');
   
   const blocosPorUsina = statusTecnicoArray
     .map(status => generateTechnicalStatusWhatsApp(status))
@@ -124,12 +124,12 @@ ${blocosPorUsina}`;
 
 // Função auxiliar para formatar data
 export const formatDateForWhatsApp = (date) => {
-  return format(new Date(date), 'dd/MM/yyyy');
+  return date.split('-').reverse().join('/');
 };
 
 // Gerar relatório diário consolidado de todos os clusters
 export const generateConsolidatedDailyReportWhatsApp = (dataSelecionada, clustersComRelatorios, allData, tcuPorCluster = {}) => {
-  const dataFormatada = format(new Date(dataSelecionada), 'dd/MM/yyyy');
+  const dataFormatada = dataSelecionada.split('-').reverse().join('/');
   
   let message = `📋 *Relatório Diário Consolidado – ${dataFormatada}*\n\n`;
   
@@ -243,7 +243,7 @@ export const generateConsolidatedDailyReportWhatsApp = (dataSelecionada, cluster
           }
           
           if (falha.previsaoInspecao) {
-            const dataPrevisao = format(new Date(falha.previsaoInspecao), 'dd/MM/yyyy');
+            const dataPrevisao = falha.previsaoInspecao.split('-').reverse().join('/');
             message += `\n   📅 Previsão: ${dataPrevisao}`;
           }
           
