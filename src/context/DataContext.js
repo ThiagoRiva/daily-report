@@ -144,11 +144,6 @@ const dataReducer = (state, action) => {
         tecnicos: state.tecnicos.filter(tecnico => tecnico.id !== action.payload)
       };
 
-    case ACTIONS.DELETE_ATIVIDADE:
-      return {
-        ...state,
-        atividades: state.atividades.filter(atividade => atividade.id !== action.payload)
-      };
 
     case ACTIONS.DELETE_STATUS_TECNICO:
       return {
@@ -232,6 +227,7 @@ export const DataProvider = ({ children }) => {
               clusterId: s.cluster_id.toString(),
               usinaId: s.usina_id.toString(),
               tecnicoId: s.tecnico_id.toString(),
+              tecnicosNomes: s.tecnicos_nomes || '', // Adicionar campo para múltiplos técnicos
               inversores: {
                 ok100: Boolean(s.inversores_ok100),
                 motivo: s.inversores_motivo || '',
@@ -319,6 +315,7 @@ export const DataProvider = ({ children }) => {
           cluster_id: parseInt(status.clusterId),
           usina_id: parseInt(status.usinaId),
           tecnico_id: parseInt(status.tecnicoId),
+          tecnicos_nomes: status.tecnicosNomes || '', // Adicionar campo para múltiplos técnicos
           inversores_ok100: status.inversores.ok100 ? 1 : 0,
           inversores_motivo: status.inversores.motivo || '',
           inversores_acao_prevista: status.inversores.acaoPrevista || '',

@@ -355,7 +355,7 @@ class Database {
 
   createStatusTecnico(data, callback) {
     const {
-      data: date, cluster_id, usina_id, tecnico_id,
+      data: date, cluster_id, usina_id, tecnico_id, tecnicos_nomes,
       inversores_ok100, inversores_motivo, inversores_acao_prevista,
       strings_ok100, strings_motivo, strings_acao_prevista,
       trackers_ok100, trackers_motivo, trackers_acao_prevista,
@@ -364,14 +364,14 @@ class Database {
 
     this.db.run(`
       INSERT OR REPLACE INTO status_tecnico (
-        data, cluster_id, usina_id, tecnico_id,
+        data, cluster_id, usina_id, tecnico_id, tecnicos_nomes,
         inversores_ok100, inversores_motivo, inversores_acao_prevista,
         strings_ok100, strings_motivo, strings_acao_prevista,
         trackers_ok100, trackers_motivo, trackers_acao_prevista,
         observacoes_gerais
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
-      date, cluster_id, usina_id, tecnico_id,
+      date, cluster_id, usina_id, tecnico_id, tecnicos_nomes || '',
       inversores_ok100, inversores_motivo, inversores_acao_prevista,
       strings_ok100, strings_motivo, strings_acao_prevista,
       trackers_ok100, trackers_motivo, trackers_acao_prevista,
