@@ -68,6 +68,6 @@ INSERT OR IGNORE INTO funcoes (nome, descricao) VALUES
 ('Supervisor', 'Supervisão de equipes'),
 ('Operador', 'Operação de equipamentos');
 
--- Inserir usuário administrador padrão
+-- Inserir usuário administrador padrão (senha padrão: admin123)
 INSERT OR IGNORE INTO usuarios (nome, email, senha, role, clusters_permitidos, ativo) VALUES
-('Administrador', 'admin@empresa.com', '$2b$10$E0dR.WF0qsUIwdgHljWFzOc7lMmvTE4nveQ5oyN9hamSWkQmdqucO', 'admin', '[1,2,3,4,5]', 1);
+('Administrador', 'admin@empresa.com', '$2b$10$nFDmklUI.PwcBea56kC8kujkQnaILRnr4E8JU1JebTjYtTdiQcHES', 'admin', '[1,2,3,4,5]', 1);

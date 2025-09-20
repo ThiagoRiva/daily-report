@@ -3,6 +3,18 @@ const fs = require('fs');
 const path = require('path');
 const config = require('../config');
 
+const DEFAULT_ADMIN = {
+  name: 'Administrador',
+  email: 'admin@empresa.com',
+  role: 'admin',
+  clusters: '[1,2,3,4,5]',
+  passwordHash: '$2b$10$nFDmklUI.PwcBea56kC8kujkQnaILRnr4E8JU1JebTjYtTdiQcHES'
+};
+
+const LEGACY_ADMIN_HASHES = new Set([
+  '$2b$10$E0dR.WF0qsUIwdgHljWFzOc7lMmvTE4nveQ5oyN9hamSWkQmdqucO'
+]);
+
 class Database {
   constructor() {
     this.db = null;
@@ -62,26 +74,85 @@ class Database {
     this.db.get('SELECT COUNT(*) as count FROM clusters', (err, row) => {
       if (err) {
         console.error('Erro ao verificar dados existentes:', err.message);
+        this.ensureDefaultAdmin();
         return;
       }
-      
+
       if (row.count > 0) {
         console.log('Dados iniciais já existem. Pulando seed data.');
+        this.ensureDefaultAdmin();
         return;
       }
-      
+
       console.log('Inserindo dados iniciais...');
       const seedPath = path.join(__dirname, 'seedData.sql');
-      const seedSql = fs.readFileSync(seedPath, 'utf8');
-      
+      let seedSql;
+      try {
+        seedSql = fs.readFileSync(seedPath, 'utf8');
+      } catch (readErr) {
+        console.error('Erro ao carregar dados iniciais:', readErr.message);
+        this.ensureDefaultAdmin();
+        return;
+      }
+
       this.db.exec(seedSql, (err) => {
         if (err) {
           console.error('Erro ao inserir dados iniciais:', err.message);
         } else {
           console.log('Dados iniciais inseridos com sucesso.');
         }
+        this.ensureDefaultAdmin();
       });
     });
+  }
+
+  ensureDefaultAdmin() {
+    this.db.get(
+      'SELECT id, senha FROM usuarios WHERE email = ?',
+      [DEFAULT_ADMIN.email],
+      (err, row) => {
+        if (err) {
+          console.error('Erro ao verificar usuário administrador padrão:', err.message);
+          return;
+        }
+
+        if (!row) {
+          this.db.run(
+            'INSERT INTO usuarios (nome, email, senha, role, clusters_permitidos, ativo) VALUES (?, ?, ?, ?, ?, ?)',
+            [
+              DEFAULT_ADMIN.name,
+              DEFAULT_ADMIN.email,
+              DEFAULT_ADMIN.passwordHash,
+              DEFAULT_ADMIN.role,
+              DEFAULT_ADMIN.clusters,
+              1
+            ],
+            (insertErr) => {
+              if (insertErr) {
+                console.error('Erro ao criar usuário administrador padrão:', insertErr.message);
+              } else {
+                console.log('Usuário administrador padrão criado com sucesso.');
+              }
+            }
+          );
+          return;
+        }
+
+        if (LEGACY_ADMIN_HASHES.has(row.senha)) {
+          this.db.run(
+            'UPDATE usuarios SET senha = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [DEFAULT_ADMIN.passwordHash, row.id],
+            (updateErr) => {
+              if (updateErr) {
+                console.error('Erro ao atualizar senha do administrador padrão:', updateErr.message);
+              } else {
+                console.log('Senha do administrador padrão atualizada para credenciais válidas.');
+              }
+            }
+          );
+        }
+      }
+    );
   }
 
   // Métodos para Clusters
