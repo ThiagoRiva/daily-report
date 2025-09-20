@@ -129,15 +129,6 @@ const LoginScreen = () => {
           </form>
         </div>
 
-        {/* Credenciais de Teste */}
-        <div className="mt-6 bg-white rounded-lg shadow-sm p-4">
-          <h3 className="text-sm font-medium text-gray-900 mb-2">Credenciais de Teste:</h3>
-          <div className="space-y-1 text-xs text-gray-600">
-            <p><strong>Admin:</strong> admin@empresa.com / admin123</p>
-            <p><strong>Coordenador:</strong> coordenador@empresa.com / coord123</p>
-            <p><strong>Técnico:</strong> tecnico@empresa.com / tecnico123</p>
-          </div>
-        </div>
       </div>
     </div>
   );

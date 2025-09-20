@@ -22,7 +22,7 @@ const ManagementScreen = ({ onBack }) => {
   const { data, deleteAtividade, deleteStatusTecnico } = useData();
   
   const [filters, setFilters] = useState({
-    dataInicio: '',
+    dataInicio: new Date().toISOString().split('T')[0],
     dataFim: '',
     clusterId: '',
     usinaId: '',

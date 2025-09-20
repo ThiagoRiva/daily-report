@@ -266,7 +266,7 @@ const TechnicalStatusScreen = ({ onBack, quickMode = false }) => {
 
   // Gerar conteúdo do PDF completo com todas as usinas
   const generatePDFContentCompleto = (clusterName, statusDoCluster) => {
-    const dataFormatada = format(new Date(filters.data), 'dd/MM');
+    const dataFormatada = format(new Date(filters.data), 'dd/MM/yyyy');
     
     let content = `
       <div class="header">

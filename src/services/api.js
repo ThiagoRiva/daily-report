@@ -161,67 +161,27 @@ class ApiService {
 
   // Excluir Cluster
   async deleteCluster(id) {
-    const response = await fetch(`${this.baseURL}/clusters/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erro ao excluir cluster');
-    }
-    
-    return await response.json();
+    return this.delete(`/clusters/${id}`);
   }
 
   // Excluir Usina
   async deleteUsina(id) {
-    const response = await fetch(`${this.baseURL}/usinas/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erro ao excluir usina');
-    }
-    
-    return await response.json();
+    return this.delete(`/usinas/${id}`);
   }
 
   // Excluir Técnico
   async deleteTecnico(id) {
-    const response = await fetch(`${this.baseURL}/tecnicos/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erro ao excluir técnico');
-    }
-    
-    return await response.json();
+    return this.delete(`/tecnicos/${id}`);
   }
 
   // Excluir Atividade
   async deleteAtividade(id) {
-    const response = await fetch(`${this.baseURL}/atividades/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erro ao excluir atividade');
-    }
-    
-    return await response.json();
+    return this.delete(`/atividades/${id}`);
   }
 
   // Excluir Status Técnico
   async deleteStatusTecnico(id) {
-    const response = await fetch(`${this.baseURL}/status-tecnico/${id}`, {
-      method: 'DELETE'
-    });
-    
-    if (!response.ok) {
-      throw new Error('Erro ao excluir status técnico');
-    }
-    
-    return await response.json();
+    return this.delete(`/status-tecnico/${id}`);
   }
 
   // Método para testar conectividade

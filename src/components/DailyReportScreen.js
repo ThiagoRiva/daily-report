@@ -16,7 +16,7 @@ const DailyReportScreen = ({ onBack, quickMode = false }) => {
   const [atividadesPorUsina, setAtividadesPorUsina] = useState({}); // Objeto: { usinaId: [atividades] }
   const [tcuComFalha, setTcuComFalha] = useState({ 
     tem: false, 
-    falhas: [] // Array de objetos { skid: '', tracker: '', tipoFalha: '', previsaoInspecao: '' }
+    falhas: [] // Array de objetos { usinaId: '', skid: '', tracker: '', tipoFalha: '', previsaoInspecao: '' }
   });
   const [observacoesGerais, setObservacoesGerais] = useState('');
   const [usinaSelecionada, setUsinaSelecionada] = useState('');
@@ -695,151 +695,6 @@ const DailyReportScreen = ({ onBack, quickMode = false }) => {
           )}
         </div>
 
-        {/* 4. TCU com falha */}
-        <div id="tcu-section" className="card mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">TCU com falha</h3>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Há TCU com falha?
-              </label>
-              <div className="flex items-center space-x-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="tcuFalha"
-                    checked={!tcuComFalha.tem}
-                    onChange={() => setTcuComFalha({ tem: false, falhas: [] })}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">Não</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="tcuFalha"
-                    checked={tcuComFalha.tem}
-                    onChange={() => setTcuComFalha({ tem: true, falhas: tcuComFalha.falhas.length > 0 ? tcuComFalha.falhas : [{ skid: '', tracker: '', tipoFalha: '', previsaoInspecao: '' }] })}
-                    className="mr-2"
-                  />
-                  <span className="text-sm">Sim</span>
-                </label>
-              </div>
-            </div>
-
-            {tcuComFalha.tem && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Falhas identificadas
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTcuComFalha({
-                        ...tcuComFalha,
-                        falhas: [...tcuComFalha.falhas, { skid: '', tracker: '', tipoFalha: '', previsaoInspecao: '' }]
-                      });
-                    }}
-                    className="btn-primary text-xs py-1 px-3"
-                  >
-                    <Plus className="w-3 h-3 mr-1" />
-                    Adicionar
-                  </button>
-                </div>
-
-                {tcuComFalha.falhas.map((falha, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-3">
-                    <div className="grid grid-cols-2 gap-3 mb-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Skid
-                        </label>
-                        <input
-                          type="text"
-                          value={falha.skid}
-                          onChange={(e) => {
-                            const newFalhas = [...tcuComFalha.falhas];
-                            newFalhas[index].skid = e.target.value;
-                            setTcuComFalha({ ...tcuComFalha, falhas: newFalhas });
-                          }}
-                          placeholder="Ex: Skid 01"
-                          className="input-field text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Tracker
-                        </label>
-                        <input
-                          type="text"
-                          value={falha.tracker}
-                          onChange={(e) => {
-                            const newFalhas = [...tcuComFalha.falhas];
-                            newFalhas[index].tracker = e.target.value;
-                            setTcuComFalha({ ...tcuComFalha, falhas: newFalhas });
-                          }}
-                          placeholder="Ex: Tracker 15"
-                          className="input-field text-sm"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Tipo de falha
-                        </label>
-                        <input
-                          type="text"
-                          value={falha.tipoFalha || ''}
-                          onChange={(e) => {
-                            const newFalhas = [...tcuComFalha.falhas];
-                            newFalhas[index].tipoFalha = e.target.value;
-                            setTcuComFalha({ ...tcuComFalha, falhas: newFalhas });
-                          }}
-                          placeholder="Ex: Falha no motor, problema elétrico..."
-                          className="input-field text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">
-                          Previsão de inspeção
-                        </label>
-                        <input
-                          type="date"
-                          value={falha.previsaoInspecao || ''}
-                          onChange={(e) => {
-                            const newFalhas = [...tcuComFalha.falhas];
-                            newFalhas[index].previsaoInspecao = e.target.value;
-                            setTcuComFalha({ ...tcuComFalha, falhas: newFalhas });
-                          }}
-                          className="input-field text-sm"
-                        />
-                      </div>
-                    </div>
-                    
-                    {tcuComFalha.falhas.length > 1 && (
-                      <div className="flex justify-end mt-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const newFalhas = tcuComFalha.falhas.filter((_, i) => i !== index);
-                            setTcuComFalha({ ...tcuComFalha, falhas: newFalhas });
-                          }}
-                          className="text-red-600 hover:text-red-800 text-xs"
-                        >
-                          Remover
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Grid para Observações e TCU */}
         <div className="responsive-grid mb-4">
@@ -855,7 +710,7 @@ const DailyReportScreen = ({ onBack, quickMode = false }) => {
           </div>
 
           {/* TCU com falha movido para grid */}
-          <div className="card">
+          <div id="tcu-section" className="card">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">TCU com falha</h3>
             
             <div className="space-y-4">
@@ -879,7 +734,7 @@ const DailyReportScreen = ({ onBack, quickMode = false }) => {
                       type="radio"
                       name="tcuFalha"
                       checked={tcuComFalha.tem}
-                      onChange={() => setTcuComFalha({ tem: true, falhas: tcuComFalha.falhas.length > 0 ? tcuComFalha.falhas : [{ skid: '', tracker: '', tipoFalha: '', previsaoInspecao: '' }] })}
+                      onChange={() => setTcuComFalha({ tem: true, falhas: tcuComFalha.falhas.length > 0 ? tcuComFalha.falhas : [{ usinaId: '', skid: '', tracker: '', tipoFalha: '', previsaoInspecao: '' }] })}
                       className="mr-2"
                     />
                     <span className="text-sm">Sim</span>
@@ -898,7 +753,7 @@ const DailyReportScreen = ({ onBack, quickMode = false }) => {
                       onClick={() => {
                         setTcuComFalha({
                           ...tcuComFalha,
-                          falhas: [...tcuComFalha.falhas, { skid: '', tracker: '', tipoFalha: '', previsaoInspecao: '' }]
+                          falhas: [...tcuComFalha.falhas, { usinaId: '', skid: '', tracker: '', tipoFalha: '', previsaoInspecao: '' }]
                         });
                       }}
                       className="btn-primary text-xs py-1 px-3"
@@ -910,6 +765,35 @@ const DailyReportScreen = ({ onBack, quickMode = false }) => {
 
                   {tcuComFalha.falhas.map((falha, index) => (
                     <div key={index} className="border border-gray-200 rounded-lg p-3">
+                      <div className="grid grid-cols-1 gap-3 mb-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Usina *
+                          </label>
+                          <select
+                            value={falha.usinaId}
+                            onChange={(e) => {
+                              const newFalhas = [...tcuComFalha.falhas];
+                              newFalhas[index].usinaId = e.target.value;
+                              setTcuComFalha({ ...tcuComFalha, falhas: newFalhas });
+                            }}
+                            className="input-field text-sm"
+                            disabled={!filters.clusterId}
+                          >
+                            <option value="">
+                              {filters.clusterId ? 'Selecione a usina' : 'Primeiro selecione um cluster'}
+                            </option>
+                            {data.usinas
+                              .filter(u => u.clusterId === filters.clusterId && u.ativo)
+                              .map(usina => (
+                                <option key={usina.id} value={usina.id}>
+                                  {usina.nome}
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      </div>
+                      
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -1113,58 +997,84 @@ const DailyReportScreen = ({ onBack, quickMode = false }) => {
                     );
                   })}
                   
-                  {/* Seção de TCU com falha */}
-                  {tcuCluster && tcuCluster.tcuComFalha.tem && (
+                  {/* Seção de TCU com falha - Agrupada por usina */}
+                  {tcuCluster && tcuCluster.tcuComFalha.tem && tcuCluster.tcuComFalha.falhas.length > 0 && (
                     <div className="border border-red-200 rounded-lg p-3 bg-red-50">
                       <h4 className="font-medium text-red-800 mb-3 flex items-center">
                         ⚡ TCU com falha registradas
                       </h4>
-                      <div className="space-y-2">
-                        {tcuCluster.tcuComFalha.falhas.map((falha, index) => (
-                          <div key={index} className="bg-white rounded p-2 border border-red-200">
-                            <div className="flex items-center justify-between">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center space-x-2">
-                                  <span className="text-sm font-medium text-gray-900">
-                                    {falha.skid && `Skid: ${falha.skid}`}
-                                    {falha.skid && falha.tracker && ' - '}
-                                    {falha.tracker && `Tracker: ${falha.tracker}`}
-                                  </span>
-                                </div>
-                                {falha.tipoFalha && (
-                                  <p className="text-xs text-red-700 mt-1">
-                                    🔧 {falha.tipoFalha}
-                                  </p>
-                                )}
-                                {falha.previsaoInspecao && (
-                                  <p className="text-xs text-blue-700 mt-1">
-                                    📅 {new Date(falha.previsaoInspecao).toLocaleDateString('pt-BR')}
-                                  </p>
-                                )}
+                      <div className="space-y-3">
+                        {/* Agrupar falhas por usina */}
+                        {(() => {
+                          const falhasPorUsina = {};
+                          tcuCluster.tcuComFalha.falhas.forEach(falha => {
+                            if (falha.usinaId) {
+                              const usina = data.usinas.find(u => u.id === falha.usinaId);
+                              const usinaName = usina?.nome || 'Usina Desconhecida';
+                              if (!falhasPorUsina[usinaName]) {
+                                falhasPorUsina[usinaName] = [];
+                              }
+                              falhasPorUsina[usinaName].push(falha);
+                            }
+                          });
+
+                          return Object.keys(falhasPorUsina).map(usinaName => (
+                            <div key={usinaName} className="bg-white rounded p-3 border border-red-200">
+                              <h5 className="font-medium text-gray-900 mb-2">📍 {usinaName}</h5>
+                              <div className="space-y-2">
+                                {falhasPorUsina[usinaName].map((falha, index) => (
+                                  <div key={index} className="bg-gray-50 rounded p-2">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center space-x-2">
+                                          <span className="text-sm font-medium text-gray-900">
+                                            {falha.skid && `Skid: ${falha.skid}`}
+                                            {falha.skid && falha.tracker && ' - '}
+                                            {falha.tracker && `Tracker: ${falha.tracker}`}
+                                          </span>
+                                        </div>
+                                        {falha.tipoFalha && (
+                                          <p className="text-xs text-red-700 mt-1">
+                                            🔧 {falha.tipoFalha}
+                                          </p>
+                                        )}
+                                        {falha.previsaoInspecao && (
+                                          <p className="text-xs text-blue-700 mt-1">
+                                            📅 {new Date(falha.previsaoInspecao).toLocaleDateString('pt-BR')}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
-                              <button
-                                onClick={() => {
-                                  // Carregar dados de TCU para edição
-                                  setTcuComFalha(tcuCluster.tcuComFalha);
-                                  
-                                  // Scroll para seção de TCU
-                                  setTimeout(() => {
-                                    const tcuSection = document.getElementById('tcu-section');
-                                    if (tcuSection) {
-                                      tcuSection.scrollIntoView({ 
-                                        behavior: 'smooth', 
-                                        block: 'start' 
-                                      });
-                                    }
-                                  }, 100);
-                                }}
-                                className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-3 rounded-lg ml-2 whitespace-nowrap transition-colors"
-                              >
-                                Editar
-                              </button>
                             </div>
-                          </div>
-                        ))}
+                          ));
+                        })()}
+                        
+                        {/* Botão de edição */}
+                        <div className="flex justify-end">
+                          <button
+                            onClick={() => {
+                              // Carregar dados de TCU para edição
+                              setTcuComFalha(tcuCluster.tcuComFalha);
+                              
+                              // Scroll para seção de TCU
+                              setTimeout(() => {
+                                const tcuSection = document.getElementById('tcu-section');
+                                if (tcuSection) {
+                                  tcuSection.scrollIntoView({ 
+                                    behavior: 'smooth', 
+                                    block: 'start' 
+                                  });
+                                }
+                              }, 100);
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white text-xs font-medium py-1 px-3 rounded-lg transition-colors"
+                          >
+                            Editar TCUs
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}

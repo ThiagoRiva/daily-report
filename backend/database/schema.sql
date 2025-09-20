@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS funcoes (
 CREATE TABLE IF NOT EXISTS atividades (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     data DATE NOT NULL,
+    data_abertura DATE DEFAULT (date('now')),
+    data_planejada DATE,
     cluster_id INTEGER NOT NULL,
     usina_id INTEGER NOT NULL,
     tecnico_id INTEGER NOT NULL,
@@ -80,6 +82,8 @@ CREATE TABLE IF NOT EXISTS atividades (
 CREATE TABLE IF NOT EXISTS status_tecnico (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     data DATE NOT NULL,
+    data_abertura DATE DEFAULT (date('now')),
+    data_planejada DATE,
     cluster_id INTEGER NOT NULL,
     usina_id INTEGER NOT NULL,
     tecnico_id INTEGER NOT NULL,
@@ -110,6 +114,26 @@ CREATE TABLE IF NOT EXISTS status_tecnico (
     UNIQUE(data, usina_id)
 );
 
+-- Tabela de TCU com Falha
+CREATE TABLE IF NOT EXISTS tcu_falhas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    data DATE NOT NULL,
+    data_abertura DATE DEFAULT (date('now')),
+    data_planejada DATE,
+    cluster_id INTEGER NOT NULL,
+    usina_id INTEGER NOT NULL,
+    tecnico_id INTEGER NOT NULL,
+    skid VARCHAR(50),
+    tracker VARCHAR(50),
+    tipo_falha TEXT,
+    previsao_inspecao DATE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cluster_id) REFERENCES clusters(id),
+    FOREIGN KEY (usina_id) REFERENCES usinas(id),
+    FOREIGN KEY (tecnico_id) REFERENCES tecnicos(id)
+);
+
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_atividades_data ON atividades(data);
 CREATE INDEX IF NOT EXISTS idx_atividades_cluster ON atividades(cluster_id);
@@ -120,6 +144,11 @@ CREATE INDEX IF NOT EXISTS idx_status_data ON status_tecnico(data);
 CREATE INDEX IF NOT EXISTS idx_status_cluster ON status_tecnico(cluster_id);
 CREATE INDEX IF NOT EXISTS idx_status_usina ON status_tecnico(usina_id);
 CREATE INDEX IF NOT EXISTS idx_status_tecnico ON status_tecnico(tecnico_id);
+
+CREATE INDEX IF NOT EXISTS idx_tcu_falhas_data ON tcu_falhas(data);
+CREATE INDEX IF NOT EXISTS idx_tcu_falhas_cluster ON tcu_falhas(cluster_id);
+CREATE INDEX IF NOT EXISTS idx_tcu_falhas_usina ON tcu_falhas(usina_id);
+CREATE INDEX IF NOT EXISTS idx_tcu_falhas_tecnico ON tcu_falhas(tecnico_id);
 
 -- Tabela de Auditoria
 CREATE TABLE IF NOT EXISTS auditoria (

@@ -128,8 +128,8 @@ export const formatDateForWhatsApp = (date) => {
 };
 
 // Gerar relatório diário consolidado de todos os clusters
-export const generateConsolidatedDailyReportWhatsApp = (data, clustersComRelatorios, allData, tcuPorCluster = {}) => {
-  const dataFormatada = format(new Date(data), 'dd/MM/yyyy');
+export const generateConsolidatedDailyReportWhatsApp = (dataSelecionada, clustersComRelatorios, allData, tcuPorCluster = {}) => {
+  const dataFormatada = format(new Date(dataSelecionada), 'dd/MM/yyyy');
   
   let message = `📋 *Relatório Diário Consolidado – ${dataFormatada}*\n\n`;
   
@@ -203,34 +203,53 @@ export const generateConsolidatedDailyReportWhatsApp = (data, clustersComRelator
   
   // Adicionar seção de TCU com falha se houver registros
   const tcuComFalhas = Object.values(tcuPorCluster).filter(tcu => 
-    tcu.data === data && tcu.tcuComFalha.tem && tcu.tcuComFalha.falhas.length > 0
+    tcu.data === dataSelecionada && tcu.tcuComFalha.tem && tcu.tcuComFalha.falhas.length > 0
   );
   
   if (tcuComFalhas.length > 0) {
     message += '\n\n' + '─'.repeat(40) + '\n\n';
     message += '⚡ *TCU COM FALHA REGISTRADAS*\n\n';
     
+    // Agrupar TCUs por cluster e usina
     tcuComFalhas.forEach(tcuData => {
       const cluster = allData.clusters.find(c => c.id === tcuData.clusterId);
-      message += `🔆 *${cluster?.nome.toUpperCase()}*\n`;
       
-      tcuData.tcuComFalha.falhas.forEach((falha, index) => {
-        const identificacao = [];
-        if (falha.skid) identificacao.push(`Skid: ${falha.skid}`);
-        if (falha.tracker) identificacao.push(`Tracker: ${falha.tracker}`);
-        
-        message += `${index + 1}) ${identificacao.join(' - ')}`;
-        
-        if (falha.tipoFalha) {
-          message += `\n   🔧 Tipo: ${falha.tipoFalha}`;
+      // Agrupar falhas por usina
+      const falhasPorUsina = {};
+      tcuData.tcuComFalha.falhas.forEach(falha => {
+        if (falha.usinaId) {
+          const usina = allData.usinas.find(u => u.id === falha.usinaId);
+          const usinaName = usina?.nome || 'Usina Desconhecida';
+          if (!falhasPorUsina[usinaName]) {
+            falhasPorUsina[usinaName] = [];
+          }
+          falhasPorUsina[usinaName].push(falha);
         }
+      });
+      
+      // Exibir falhas por usina
+      Object.keys(falhasPorUsina).forEach(usinaName => {
+        message += `📍 *${usinaName}*\n`;
         
-        if (falha.previsaoInspecao) {
-          const dataPrevisao = format(new Date(falha.previsaoInspecao), 'dd/MM/yyyy');
-          message += `\n   📅 Previsão: ${dataPrevisao}`;
-        }
-        
-        message += '\n\n';
+        falhasPorUsina[usinaName].forEach((falha, index) => {
+          const identificacao = [];
+          if (falha.skid) identificacao.push(`Skid: ${falha.skid}`);
+          if (falha.tracker) identificacao.push(`Tracker: ${falha.tracker}`);
+          
+          message += `${index + 1}) ${identificacao.join(' - ')}`;
+          
+          if (falha.tipoFalha) {
+            message += `\n   🔧 Tipo: ${falha.tipoFalha}`;
+          }
+          
+          if (falha.previsaoInspecao) {
+            const dataPrevisao = format(new Date(falha.previsaoInspecao), 'dd/MM/yyyy');
+            message += `\n   📅 Previsão: ${dataPrevisao}`;
+          }
+          
+          message += '\n';
+        });
+        message += '\n';
       });
     });
   }
